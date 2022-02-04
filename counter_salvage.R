@@ -1,6 +1,9 @@
 require('pacman')
 p_load(Rtsne, data.table, scales, edgeR, statmod, poolr, pheatmap, svglite, ggplot2, ggrepel, Rtsne, pracma, colourpicker, RColorBrewer)
-source("annotate_key.R")
+# source("annotate_key.R")
+
+annotated_key <- fread("annotated_key.tsv")
+exp_design <- fread("exp_design.tsv")
 
 all_counts <- fread("all_counts_bowtie.tsv")
 
@@ -84,9 +87,12 @@ breaks <- breaks[-length(breaks)]
 breaks <- c(breaks, 0.99999999)
 
 plot_colors <- c(
-	colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves], 
+	colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves],
 	colorRampPalette(c("white", "#007ac1"))(break_halves)[-c(1, break_halves)])
 
+plot_colors <- colorRampPalette(c("white", "#007ac1"))(break_halves*2-1)[-c(1,break_halves)]
+plot_colors <- c(plot_colors, "dark grey")
+	
 to_plot_title <- paste("Raw Count Condition Correlations")
 
 to_plot <- pheatmap(plot_matrix,
