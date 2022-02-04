@@ -132,3 +132,4 @@ annotated_key <- annotated_key[, .(chromosome,
 																	 type)]
 #/fix
 ################################################################################
+fwrite(annotated_key, "annotated_key.tsv", sep = "\t")
