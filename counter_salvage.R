@@ -4,44 +4,47 @@ p_load(Rtsne, data.table, scales, edgeR, statmod, poolr, pheatmap, svglite, ggpl
 
 annotated_key <- fread("annotated_key.tsv")
 exp_design <- fread("exp_design.tsv")
+exp_design <- exp_design[condition != "Undetermined"]
 
-all_counts <- fread("all_counts_bowtie.tsv")
+all_counts <- fread("all_counts_seal.tsv", header = FALSE, col.names = c("promoter", "spacer", "count", "condition"))
+inoculum_counts <- fread("inoculum_counts.tsv", header = FALSE, col.names = c("promoter", "spacer", "count"))
+inoculum_counts[, condition := "inoculum"]
 
-this_guide <- "PA14_RS23615_lptA_47"
+all_counts <- rbind(all_counts, inoculum_counts)
 
-promoter_guide_combo <- dcast(all_counts[guide == this_guide][, .(promoter, condition, count)], promoter ~ condition, value.var = "count", fill = 0)
-promoter_guide_combo <- melt(promoter_guide_combo, id.vars = "promoter", variable.name = "condition", value.name = "count")
-ggplot(data = promoter_guide_combo, aes(x = condition, y = count, fill = promoter)) +
+this_spacer <- "141_PA1657_Ctrl_2"
+
+promoter_spacer_combo <- dcast(all_counts[spacer == this_spacer][, .(promoter, condition, count)], promoter ~ condition, value.var = "count", fill = 0)
+promoter_spacer_combo <- melt(promoter_spacer_combo, id.vars = "promoter", variable.name = "condition", value.name = "count")
+ggplot(data = promoter_spacer_combo, aes(x = condition, y = count, fill = promoter)) +
 	geom_bar(stat = "identity", position = position_dodge()) +
 	geom_text(aes(label = promoter), vjust = 2, color = "white",
 						position = position_dodge(0.9), size = 3.5) +
 	scale_fill_brewer(palette = "Paired") +
-	ggtitle(paste("Promoter distribution for", this_guide)) +
+	ggtitle(paste("Promoter distribution for", this_spacer)) +
 	theme(axis.text.x = element_text(angle = 45, vjust = 1.0, hjust = 1))
 
+
+
+
 # get rid of all the other promoters
-all_counts <- all_counts[promoter == "P1"][, .(guide, condition, count)]
-
-# accidentally called the spacers "guides", and changing the name here.
-all_counts[, spacer := guide]
-all_counts[, guide := NULL]
-
-
+all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
+all_counts <- all_counts[condition != "inoculum"][, .(spacer, condition, count)]
 
 # # these conditions suck
 rejected_conditions = c("Mouse_P1_018")
 # 18?
 
-all_counts <- all_counts[!(condition %in% rejected_conditions)]
-exp_design <- exp_design[!(condition %in% rejected_conditions)]
-# 
+# all_counts <- all_counts[!(condition %in% rejected_conditions)]
+# exp_design <- exp_design[!(condition %in% rejected_conditions)]
+
 # exp_design[media == "Gent", media := "LB"]
 
 ################################################################################
 # Check for Data Integrity
 ################################################################################
 data_grid <- data.table::dcast(
-	all_counts[condition %like% "Mouse" | condition %like% "Undetermined"], 
+	all_counts, 
 	spacer ~ condition,
 	value.var = "count", 
 	fill = 0)
@@ -128,8 +131,8 @@ data_permut <-  model.matrix( ~ 0 + data_group)
 colnames(data_permut) <- levels(data_group)
 rownames(data_permut) <- colnames(data_grid_matrix)
 
-data_permut_check <- melt(data.table(data_permut,keep.rownames = TRUE), id.vars = "rn")[value==1][, .(rn, variable)]
-data_permut_check <- data_permut_check[exp_design, on = .(rn==condition)]
+data_permut_check <- melt(data.table(data_permut,keep.rownames = "condition"), id.vars = "condition")[value==1][, .(condition, variable)]
+data_permut_check <- data_permut_check[exp_design, on = .(condition==condition)]
 
 
 data_y <- DGEList(counts = data_grid_matrix, 
