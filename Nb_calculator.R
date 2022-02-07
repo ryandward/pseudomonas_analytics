@@ -331,6 +331,37 @@ print(this_plot)
 
 #################################################################
 
+to_barplot <- botneck_summary[, .(condition, med, control, knockdown)]
+to_barplot <- melt(to_barplot, id.vars = "condition", variable = "group", value.name = "med")
+to_barplot <- to_barplot[group != "med"]
+to_barplot <- exp_design[to_barplot, on = .(condition)]
+to_barplot[, level := paste(media, gDNA_source, growth_condition)]
+to_barplot[, rep := as.character(rep)]
+to_barplot$rep <- factor(to_barplot$rep, levels = c(1:10))
+
+to_barplot[
+	, med := to_barplot[
+		i  = group == "control",
+		j  = .(ctrl = med),
+		by = .(verbose)][
+			i  = .SD, 
+			on = .(verbose),
+			j  = .(med = med / ctrl),
+			by = .EACHI]$med]
+
+this_plot <- ggplot(data = to_barplot[group == "knockdown"], aes(x = level, y = med, fill = rep)) +
+	geom_bar(stat = "identity", position = position_dodge()) +
+	ggtitle(paste("Relative CPM (Knockdown/Control)")) +
+	scale_fill_brewer(palette = "Paired") +
+	
+	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1))
+
+ggthemr_reset()
+print(this_plot)
+
+
+#################################################################
+
 to_barplot <- botneck_summary[, .(verbose, Nb, control, knockdown)]
 to_barplot <- melt(to_barplot, id.vars = "verbose", variable = "group", value.name = "Nb")
 to_barplot <- to_barplot[group != "Nb"]

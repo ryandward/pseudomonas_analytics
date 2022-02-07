@@ -19,7 +19,7 @@ targeted_CPM[!is.na(rep), verbose := paste(
 targeted_CPM[is.na(rep), verbose := paste(
 	media, gDNA_source, growth_condition, sep = "_")]
 
-this_gene <- "rnhA"
+this_gene <- "ygfZ"
 
 
 to_plot <- targeted_CPM[gene_name == this_gene | locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose)]
