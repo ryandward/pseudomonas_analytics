@@ -35,16 +35,14 @@ all_counts <-
 
 # # # these conditions suck
 # rejected_conditions = c("Mouse_P1_018")
-# # 18?
 #
 # all_counts <- all_counts[!(condition %in% rejected_conditions)]
 # exp_design <- exp_design[!(condition %in% rejected_conditions)]
 
 setorder(all_counts, condition)
 setorder(exp_design, condition)
-setorder(annotated_key, condition)
 
-# exp_design[media == "Gent", media := "LB"]
+exp_design[media == "Gent", media := "LB"]
 
 ################################################################################
 # Check for Data Integrity
@@ -299,7 +297,6 @@ results_FDR <- all_counts[, .(genes = unique(spacer))]
 results_LFC <- all_counts[, .(genes = unique(spacer))]
 
 ################################################################################
-################################################################################
 
 for (i in 1:ncol(data_contrast)) {
 	results <- glmQLFTest(data_fit, contrast = data_contrast[, i])
@@ -455,8 +452,6 @@ points(-log10(FDR) ~ LFC,
 
 ##################################
 # Chi Square Test, did it work?
-##################################
-
 did_it_work <-
 	data.table(data_CPM, keep.rownames = "spacer")[, .(spacer, Mouse_P1_003, Mouse_P1_015, Mouse_P1_016, Mouse_P1_017)]
 

@@ -1,5 +1,13 @@
 source("counter_salvage.R")
-source("Nb_calculator.R")
+# source("Nb_calculator.R")
+
+CPM_melted <-
+	melt(
+		data.table(data_CPM, keep.rownames = "spacer"),
+		id.vars = "spacer",
+		variable.name = "condition",
+		value.name = "CPM"
+	)
 
 annotated_key <- fread("annotated_key.tsv")
 
@@ -19,16 +27,32 @@ targeted_CPM[!is.na(rep), verbose := paste(
 targeted_CPM[is.na(rep), verbose := paste(
 	media, gDNA_source, growth_condition, sep = "_")]
 
-this_gene <- "ygfZ"
+this_gene <- "orfN"
 
+plot_CPM <- function(this_gene) {
+	to_plot <-
+		targeted_CPM[gene_name == this_gene |
+								 	locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose, offset)]
+	
+	to_plot$offset <- factor(as.character(to_plot$offset),
+													 levels = as.character(sort(unique(to_plot$offset))))
+	
+	this_plot <-
+		ggplot(data = to_plot, aes(x = verbose, y = CPM, fill = offset)) +
+		geom_bar(stat = "identity", position = position_dodge()) +
+		ggtitle(paste("CPM for guides:", this_gene)) +
+		theme(axis.text.x = element_text(
+			angle = 55,
+			vjust = 1.0,
+			hjust = 1
+		))
+	
+	ggthemr("flat")
+	print(this_plot)
+	rm(this_gene)
+	ggthemr_reset()
 
-to_plot <- targeted_CPM[gene_name == this_gene | locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose)]
-this_plot <- ggplot(data = to_plot, aes(x = verbose, y = CPM, fill = name)) +
-	geom_bar(stat = "identity", position = position_dodge()) +
-	ggtitle(paste("CPM for guides:", this_gene)) +
-	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1)) 
+}
 
-print(this_plot)
-rm(this_gene)
 # save as 1000 x 750
 
