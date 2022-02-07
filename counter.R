@@ -264,26 +264,30 @@ colnames(data_CPM) <- factor(exp_design[,  paste(media, gDNA_source, growth_cond
 
 ################################################################################
 # MDS PLOT
-colors <- rep(
-	c(alpha("black", 0.25),
-		alpha("red", 0.5)), 2)
 
-pch <- c(
-	rep(19, 2), 
-	rep(21, 2))
+plotMDS(data_y)
 
-plotMDS(aba_y, 
-				col = colors[aba_group], 
-				pch = pch[aba_group], 
-				cex = 3)
-
-legend("bottomleft", 
-			 legend = levels(aba_group), 
-			 pch = pch, 
-			 col = colors, 
-			 ncol = 2)
-
-title("MDS: Guide Count")
+# 
+# colors <- rep(
+# 	c(alpha("black", 0.25),
+# 		alpha("red", 0.5)), 2)
+# 
+# pch <- c(
+# 	rep(19, 2), 
+# 	rep(21, 2))
+# 
+# plotMDS(aba_y, 
+# 				col = colors[aba_group], 
+# 				pch = pch[aba_group], 
+# 				cex = 3)
+# 
+# legend("bottomleft", 
+# 			 legend = levels(aba_group), 
+# 			 pch = pch, 
+# 			 col = colors, 
+# 			 ncol = 2)
+# 
+# title("MDS: Guide Count")
 # /MDS
 ################################################################################
 # CPM Heatmap
@@ -395,6 +399,8 @@ melted_results_FDR <-
 		value.name = "FDR",
 		measure.vars = contrast_levels)
 
+melted_results_FDR <- melted_results_FDR[!is.na(FDR)]
+
 ################################################################################
 
 melted_results_LFC <- 
@@ -422,10 +428,6 @@ melted_results <-
 	melted_results_LFC[
 		melted_results_FDR, 
 		on = .(genes, condition)]
-
-################################################################################
-
-melted_results <- melted_results[!is.na(FDR)]
 
 ################################################################################
 
@@ -471,11 +473,8 @@ plot(hist(CPM_reps[spacer %like% "Ctrl", .(std_CPM = std(CPM)), by = .(spacer)]$
 mouse_grid_FDR <- dcast(median_melted_results, locus_tag + gene_name + type ~ condition, value.var = "FDR")
 mouse_grid_LFC <- dcast(median_melted_results, locus_tag + gene_name + type ~ condition, value.var = "medLFC")
 
-plot(-log10(FDR)~medLFC, data = median_melted_results[condition == "mouse_pellet_10x_inoculum_dilution - inoculum_plated_t0"], pch = 20)
-abline(v = median_melted_results[condition == "mouse_pellet_10x_inoculum_dilution - inoculum_plated_t0" & type == "control"]$medLFC)
-
-# there might be an easier way, but this is how to order by the median FDR 
-# create a dummy FDR and a dummy medLFC that correspond to the order of the median FDR
+plot(-log10(FDR)~medLFC, data = median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"], pch = 20, main = "Median: mouse_plated_10x_inoculum_dilution - inoculum_plated_t0")
+abline(v = median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0" & type == "control"]$medLFC)
 
 FDR_order <- median_melted_results[, .(mean_order = mean(FDR)), by = .(locus_tag, gene_name, type)]
 setorder(FDR_order, mean_order, locus_tag)

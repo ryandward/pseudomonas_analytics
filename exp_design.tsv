@@ -1,18 +1,17 @@
-condition	media	gDNA_source	growth_condition	rep
-Mouse_P1_001	LB	pellet	6_generations	NA
-Mouse_P1_002	Gent	pellet	6_generations	NA
-Mouse_P1_003	inoculum	pellet	t0	NA
-Mouse_P1_004	LB	plated	6_generations	NA
-Mouse_P1_005	Gent	plated	6_generations	NA
-Mouse_P1_006	inoculum	plated	t0	NA
-Mouse_P1_007	mouse	pellet	10x_inoculum_dilution	1
-Mouse_P1_008	mouse	pellet	10x_inoculum_dilution	2
-Mouse_P1_015	mouse	plated	10x_inoculum_dilution	1
-Mouse_P1_016	mouse	plated	10x_inoculum_dilution	2
-Mouse_P1_017	mouse	plated	10x_inoculum_dilution	3
-Mouse_P1_018	mouse	plated	100x_inoculum_dilution	1
-Mouse_P1_019	mouse	plated	100x_inoculum_dilution	2
-Mouse_P1_020	mouse	plated	100x_inoculum_dilution	3
-Mouse_P1_021	mouse	plated	100x_inoculum_dilution	4
-Mouse_P1_022	mouse	plated	100x_inoculum_dilution	5
-Undetermined	NA	NA	NA	NA
+condition	media	gDNA_source	growth_condition	rep	generations
+Mouse_P1_001	LB	pellet	6_generations	1	6
+Mouse_P1_002	Gent	pellet	6_generations	1	6
+Mouse_P1_003	inoculum	pellet	t0	1	0
+Mouse_P1_004	LB	plated	6_generations	1	6
+Mouse_P1_005	Gent	plated	6_generations	1	6
+Mouse_P1_006	inoculum	plated	t0	1	0
+Mouse_P1_007	mouse	pellet	10x_inoculum_dilution	3	16
+Mouse_P1_008	mouse	pellet	10x_inoculum_dilution	4	16
+Mouse_P1_015	mouse	plated	10x_inoculum_dilution	3	16
+Mouse_P1_016	mouse	plated	10x_inoculum_dilution	4	16
+Mouse_P1_017	mouse	plated	10x_inoculum_dilution	5	16
+Mouse_P1_018	mouse	plated	100x_inoculum_dilution_CLEARED	6	16
+Mouse_P1_019	mouse	plated	100x_inoculum_dilution	7	16
+Mouse_P1_020	mouse	plated	100x_inoculum_dilution	8	16
+Mouse_P1_021	mouse	plated	100x_inoculum_dilution	9	16
+Mouse_P1_022	mouse	plated	100x_inoculum_dilution	10	16

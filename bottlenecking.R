@@ -27,12 +27,17 @@ Nb = 42 / ( f_hat - 1 / jan[, sum(Pre1)] - 1/jan[, sum(Pre1)])
 
 #######################
 
-bottlenecked_levels <- data_grid[, .(fis = (Mouse_P1_016 / sum(Mouse_P1_016)), fio = Mouse_P1_003/sum(Mouse_P1_003))]
-bottlenecked_levels[, ratio := ((fis-fio)^2) / (fio * (1- fio))]
-bottlenecked_levels <- bottlenecked_levels[!is.na(ratio) & ratio!=Inf]
 
-f_hat = bottlenecked_levels[ratio!=Inf & ! (is.na(ratio)), sum(ratio) ] * 
-	( 1 / nrow(bottlenecked_levels))
 
-Nb = 10 / ( f_hat - 1 / data_grid[, sum(Mouse_P1_003)] - 1/data_grid[, sum(Mouse_P1_003)])
+bottlenecked_levels <- data_grid[, .(
+	fis = Mouse_P1_022 / sum(Mouse_P1_022), 
+	fio = Mouse_P1_003 / sum(Mouse_P1_003))]
+
+bottlenecked_levels[, ratio := ( (fis - fio)^2) / (fio * (1 - fio))]
+
+bottlenecked_levels <- bottlenecked_levels[!is.na(ratio) & ratio != Inf]
+
+f_hat = bottlenecked_levels[ratio != Inf & ! (is.na(ratio)), sum(ratio) ] * ( 1 / nrow(bottlenecked_levels))
+
+Nb = 10 / ( f_hat - 1 / data_grid[, sum(Mouse_P1_003)] - 1 / data_grid[, sum(Mouse_P1_003)])
 
