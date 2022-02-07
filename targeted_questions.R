@@ -51,6 +51,33 @@ plot_CPM <- function(this_gene) {
 
 # save as 1000 x 750
 
+plot_CPM_error <- function(this_gene) {
+	
+	this_gene <- "orfN"
+	to_plot <-
+		targeted_CPM[gene_name == this_gene |
+								 	locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose, offset, rep)]
+	
+	to_plot[, group := gsub("_[0-9]+$", "", verbose) ]
+	
+	this_plot <-
+		ggplot(data = to_plot, aes(x = verbose, y = CPM, fill = offset)) +
+		geom_boxplot() + ggtitle("Box plot") +
+		ggtitle(paste("CPM for guides:", this_gene)) +
+		theme(axis.text.x = element_text(
+			angle = 55,
+			vjust = 1.0,
+			hjust = 1
+		))
+	
+	ggthemr("flat")
+	print(this_plot)
+	rm(this_gene)
+	ggthemr_reset()
+	
+}
+
+
 plot_CPM_controls <- function() {
 	random_controls <-
 		CPM_melted[spacer %like% "Ctrl", .(spacer = unique(spacer))][sample(.N, 8)]
