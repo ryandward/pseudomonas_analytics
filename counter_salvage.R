@@ -427,7 +427,7 @@ melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_ta
 
 to_plot <- melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"]
 
-ggplot(to_plot, aes(x = LFC, y = -log10(FDR))) +
+plot_object <- ggplot(to_plot, aes(x = LFC, y = -log10(FDR))) +
 	geom_point(aes(color = type), size = 2) +
 	scale_color_manual(values = c("#D81B60", "#9e9e9e", "#212121", "#1E88E5", "#FFC107")) +
 	theme_bw(base_size = 12) +
@@ -436,7 +436,7 @@ ggplot(to_plot, aes(x = LFC, y = -log10(FDR))) +
 									 size = 5,
 									 box.padding = unit(0.5, "lines"),
 									 point.padding = unit(0.5, "lines"),
-									 max.iter = 500000,
+									 max.iter = 5000,
 									 max.overlaps = 100,
 									 parse = TRUE) +
 	ggtitle("Mouse Plated 10x Inoculum Dilution vs. Inoculum Plated t0 (guides)") +
@@ -447,13 +447,15 @@ ggplot(to_plot, aes(x = LFC, y = -log10(FDR))) +
 				legend.title = element_text(size = 14, color = "black"),
 				legend.position = "bottom")
 
+print(plot_object)
+
 #### Plotting our favorite condition GENE-LEVEL #####
 median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
 median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 
 to_plot <- median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"]
 
-ggplot(to_plot, aes(x = medLFC, y = -log10(FDR))) +
+plot_object <- ggplot(to_plot, aes(x = medLFC, y = -log10(FDR))) +
 	geom_point(aes(color = type), size = 2) +
 	scale_color_manual(values = c("#D81B60", "#9e9e9e", "#212121", "#1E88E5", "#FFC107")) +
 	theme_bw(base_size = 12) +
@@ -462,7 +464,7 @@ ggplot(to_plot, aes(x = medLFC, y = -log10(FDR))) +
 									 size = 5,
 									 box.padding = unit(0.5, "lines"),
 									 point.padding = unit(0.5, "lines"),
-									 max.iter = 500000,
+									 max.iter = 5000,
 									 max.overlaps = 100,
 									 parse = TRUE) +
 	ggtitle("Mouse Plated 10x Inoculum Dilution vs. Inoculum Plated t0") +
@@ -472,3 +474,5 @@ ggplot(to_plot, aes(x = medLFC, y = -log10(FDR))) +
 				legend.text = element_text(size = 8, color = "black"),
 				legend.title = element_text(size = 14, color = "black"),
 				legend.position = "bottom")
+
+print(plot_object)
