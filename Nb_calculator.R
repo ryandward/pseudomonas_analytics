@@ -123,7 +123,7 @@ for (i in botneck_summary[generations > 0, condition]) {
 	
 	botneck_summary[condition == i, Nb := ..Nb]}
 
-# finding Nb for Controls #######################################
+# finding Nb for control_Nbs #######################################
 #################################################################
 
 for (i in botneck_summary[generations > 0, condition]) {
@@ -136,9 +136,9 @@ for (i in botneck_summary[generations > 0, condition]) {
 	f_hat <- botneck_calcs[ratio != Inf & !(is.na(ratio)), sum(ratio) ] * ( 1 / length(data_grid_remelted[spacer %like% "Ctrl", unique(spacer)]))
 	Nb <- botneck_summary[condition == i, generations] / (f_hat - (1 / data_grid_remelted[condition == base_t0 & spacer %like% "Ctrl", sum(count)]) - (1 / data_grid_remelted[condition == base_t0 & spacer %like% "Ctrl", sum(count)]))
 	
-	botneck_summary[condition == i, control := ..Nb]}
+	botneck_summary[condition == i, control_Nb := ..Nb]}
 
-# finding Nb for Knockdown#######################################
+# finding Nb for knockdown_Nb#######################################
 #################################################################
 
 for (i in botneck_summary[generations > 0, condition]) {
@@ -151,7 +151,7 @@ for (i in botneck_summary[generations > 0, condition]) {
 	f_hat <- botneck_calcs[ratio != Inf & !(is.na(ratio)), sum(ratio) ] * ( 1 / length(data_grid_remelted[!(spacer %like% "Ctrl"), unique(spacer)]))
 	Nb <- botneck_summary[condition == i, generations] / (f_hat - (1 / data_grid_remelted[condition == base_t0 & !(spacer %like% "Ctrl"), sum(count)]) - (1 / data_grid_remelted[condition == base_t0 & !(spacer %like% "Ctrl"), sum(count)]))
 	
-	botneck_summary[condition == i, knockdown := ..Nb]}
+	botneck_summary[condition == i, knockdown_Nb := ..Nb]}
 
 # Barplots                 ######################################
 #################################################################
@@ -204,7 +204,7 @@ print(this_plot)
 
 #################################################################
 
-to_barplot <- botneck_summary[, .(verbose, Nb, control, knockdown)]
+to_barplot <- botneck_summary[, .(verbose, Nb, control_Nb, knockdown_Nb)]
 to_barplot <- melt(to_barplot, id.vars = "verbose", variable = "group", value.name = "Nb")
 to_barplot <- to_barplot[group != "Nb"]
 
@@ -232,12 +232,12 @@ botneck_summary <- CPM_melted[CPM > 0, .N,  by = .(condition)]
 
 botneck_summary <- botneck_summary[
 	CPM_melted[, .(med = median(CPM)), 
-										 by = .(condition)], on = .(condition)]
+						 by = .(condition)], on = .(condition)]
 
 botneck_summary <- botneck_summary[
 	CPM_melted[spacer %like% "Ctrl", 
-										 .(control = median(CPM)), 
-										 by = .(condition)], on = .(condition)]
+						 .(control = median(CPM)), 
+						 by = .(condition)], on = .(condition)]
 
 botneck_summary <- botneck_summary[
 	data_grid_remelted[!(spacer %like% "Ctrl"), 
@@ -261,7 +261,7 @@ for (i in botneck_summary[generations > 0, condition]) {
 	Nb <- botneck_summary[condition == i, generations] / (f_hat - (1 / data_grid_remelted[condition == base_t0, sum(count)]) - (1 / data_grid_remelted[condition == base_t0, sum(count)]))
 	
 	botneck_summary[condition == i, Nb := ..Nb]}
-# finding Nb for Controls #######################################
+# finding Nb for control_Nbs #######################################
 #################################################################
 for (i in botneck_summary[generations > 0, condition]) {
 	
@@ -274,8 +274,8 @@ for (i in botneck_summary[generations > 0, condition]) {
 	f_hat <- botneck_calcs[ratio != Inf & !(is.na(ratio)), sum(ratio) ] * ( 1 / length(data_grid_remelted[spacer %like% "Ctrl", unique(spacer)]))
 	Nb <- botneck_summary[condition == i, generations] / (f_hat - (1 / data_grid_remelted[condition == base_t0 & spacer %like% "Ctrl", sum(count)]) - (1 / data_grid_remelted[condition == base_t0 & spacer %like% "Ctrl", sum(count)]))
 	
-	botneck_summary[condition == i, control := ..Nb]}
-# finding Nb for Knockdown#######################################
+	botneck_summary[condition == i, control_Nb := ..Nb]}
+# finding Nb for knockdown_Nb#######################################
 #################################################################
 for (i in botneck_summary[generations > 0, condition]) {
 	
@@ -288,7 +288,7 @@ for (i in botneck_summary[generations > 0, condition]) {
 	f_hat <- botneck_calcs[ratio != Inf & !(is.na(ratio)), sum(ratio) ] * ( 1 / length(data_grid_remelted[!(spacer %like% "Ctrl"), unique(spacer)]))
 	Nb <- botneck_summary[condition == i, generations] / (f_hat - (1 / data_grid_remelted[condition == base_t0 & !(spacer %like% "Ctrl"), sum(count)]) - (1 / data_grid_remelted[condition == base_t0 & !(spacer %like% "Ctrl"), sum(count)]))
 	
-	botneck_summary[condition == i, knockdown := ..Nb]}
+	botneck_summary[condition == i, knockdown_Nb := ..Nb]}
 
 # Barplots                 ######################################
 #################################################################
@@ -362,7 +362,7 @@ print(this_plot)
 
 #################################################################
 
-to_barplot <- botneck_summary[, .(verbose, Nb, control, knockdown)]
+to_barplot <- botneck_summary[, .(verbose, Nb, control_Nb, knockdown_Nb)]
 to_barplot <- melt(to_barplot, id.vars = "verbose", variable = "group", value.name = "Nb")
 to_barplot <- to_barplot[group != "Nb"]
 
@@ -371,7 +371,7 @@ this_plot <- ggplot(data = to_barplot, aes(x = verbose, y = Nb, fill = group)) +
 	ggtitle(paste("Bottleneck Number (Effective Population, CPM) by Condition: Controls, Knockdowns.")) +
 	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1))
 
-ggthemr("dust")
+ggthemr("paired")
 print(this_plot)
 
 # save these as 1500 x 750
