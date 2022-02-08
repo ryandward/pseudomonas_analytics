@@ -2,6 +2,8 @@ require('pacman')
 p_load(ggthemr, data.table, scales, edgeR, statmod, poolr, pheatmap, svglite, ggplot2, ggrepel, Rtsne, pracma, colourpicker, RColorBrewer)
 
 
+############DENSITY PLOTS############################
+
 exp_design <- fread("exp_design.tsv")
 exp_design <- exp_design[condition != "Undetermined"]
 
@@ -375,3 +377,20 @@ ggthemr("paired")
 print(this_plot)
 
 # save these as 1500 x 750
+
+for(i in unique(CPM_melted$condition)){
+	
+	control <- density(log2(CPM_melted[spacer %like% "Ctrl" & condition == i]$CPM))
+	knockdown <- density(log2(CPM_melted[!spacer %like% "Ctrl" & condition == i]$CPM))
+	
+	low_x  <- min(c(control$x, knockdown$x))
+	high_x <- max(c(control$x, knockdown$x))
+	low_y  <- min(c(control$y, knockdown$y))
+	high_y <- max(c(control$y, knockdown$y))
+	
+	plot(control, xlim = c(low_x, high_x), ylim = c(low_y, high_y), main = exp_design[condition == i, .(paste(condition, media, growth_condition, gDNA_source))], col = "blue", lwd = 2)
+	lines(knockdown, xlim = c(low_x, high_x), ylim = c(low_y, high_y), col = "red", lwd = 2)
+	
+	
+}
+
