@@ -373,7 +373,7 @@ this_plot <- ggplot(data = to_barplot, aes(x = verbose, y = Nb, fill = group)) +
 	ggtitle(paste("Bottleneck Number (Effective Population, CPM) by Condition: Controls, Knockdowns.")) +
 	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1))
 
-ggthemr("paired")
+ggthemr("flat")
 print(this_plot)
 
 # save these as 1500 x 750

@@ -1,4 +1,5 @@
 source("Nb_calculator.R")
+source("targeted_questions.R")
 ########################################################################################
 ##### Simple but complex way to get density plots from all conditions into one data.table
 
@@ -44,14 +45,16 @@ targeted_densities_summary[is.na(CI_lower), CI_lower := meany]
 for (i in targeted_densities_summary[, unique(Condition)]) {
 	for (j in targeted_densities_summary[, unique(type)]) {
 		
+		ggthemr("flat")
+		
 		if (j == "control") {plot_shade = "blue"}
 		if (j != "control") {plot_shade = "red"}
 		
 		plot_object <- ggplot(
-		targeted_densities_summary[Condition == i & type != j], 
+		targeted_densities_summary[Condition == i & type == j], 
 		aes(x = x, y = meany)) +
 		geom_line(
-			data = targeted_densities[Condition == i & type != j], 
+			data = targeted_densities[Condition == i & type == j], 
 			aes(x = x, y = y, group = condition), 
 			color = "dark grey") +
 		geom_line(
@@ -70,5 +73,7 @@ for (i in targeted_densities_summary[, unique(Condition)]) {
 		ylab("Density")
 		
 	print(plot_object)
+	
+	ggthemr_reset()
 	}
 }
