@@ -41,9 +41,8 @@ targeted_densities_summary$CI_upper <- targeted_densities_summary$meany - qt((1-
 targeted_densities_summary[is.na(CI_lower), CI_lower := meany]
 ########################################################################################
 
-for(i in targeted_densities_summary[, unique(Condition)]) {
-	
-	for(j in targeted_densities_summary[, unique(type)]) {
+for (i in targeted_densities_summary[, unique(Condition)]) {
+	for (j in targeted_densities_summary[, unique(type)]) {
 		
 		if (j == "control") {plot_shade = "blue"}
 		if (j != "control") {plot_shade = "red"}
@@ -66,8 +65,10 @@ for(i in targeted_densities_summary[, unique(Condition)]) {
 			alpha = 0.2) +
 		xlim(targeted_densities_summary[, min(x)], targeted_densities_summary[, max(x)]) +
 		ylim(targeted_densities_summary[, min(CI_lower, na.rm = T)], targeted_densities_summary[, max(CI_upper, na.rm = T)]) +
-		ggtitle(bquote(Log[2] ~ counts ~ per ~ million. ~ bold(.(i)) ~ italic(.(j)) ~ guides. ))
-			
+		ggtitle(bquote(Log[2] ~ counts ~ per ~ million. ~ bold(.(i)) ~ italic(.(j)) ~ guides. )) +
+		xlab(bquote(Log[2] ~ counts ~ per ~ million)) +
+		ylab("Density")
+		
 	print(plot_object)
 	}
 }
