@@ -10,7 +10,8 @@ p_load(
 	ggplot2,
 	ggrepel,
 	colourpicker,
-	RColorBrewer
+	RColorBrewer,
+	poolr
 )
 
 
@@ -456,7 +457,7 @@ plot_object <- ggplot(to_plot, aes(x = medLFC, y = -log10(FDR))) +
 	
 	theme_bw(base_size = 12) +
 	geom_label_repel(
-		data = to_plot[I <= 10],
+		data = to_plot[gene_name %in% purine_enrichment$gene_name],
 		aes(label = gene_name_stylized),
 		size = 5,
 		box.padding = unit(0.5, "lines"),
