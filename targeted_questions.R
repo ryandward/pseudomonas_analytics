@@ -13,7 +13,7 @@ annotated_key <- fread("annotated_key.tsv")
 
 targeted_CPM <- CPM_melted[condition %in% c("Inoculum",
 																						"Mouse_P1_003",
-																						"Mouse_P1_006",
+																						# "Mouse_P1_006",
 																						"Mouse_P1_015",
 																						"Mouse_P1_016",
 																						"Mouse_P1_017")]
@@ -79,7 +79,17 @@ box_CPM <- function(this_gene) {
 		ggplot(data = to_plot, aes(x = Condition, y = log2(CPM), fill = offset)) +
 		geom_boxplot() + 
 		scale_fill_brewer(palette = "Accent") +
-		ggtitle(paste("CPM for guides:", this_gene))
+		ylab("Log2 Counts per Million") +
+		xlab("Condition") +
+		ggtitle(paste("Guides recovered in pellet and mouse for", this_gene)) +
+		theme(
+			plot.title = element_text(hjust = 0.5, size = 20),
+			axis.text = element_text(size = 14, color = "black"),
+			axis.title = element_text(size = 14, color = "black"),
+			legend.text = element_text(size = 8, color = "black"),
+			legend.title = element_text(size = 14, color = "black"),
+			legend.position = "bottom"
+		)
 	
 	ggthemr("flat")
 	print(this_plot)

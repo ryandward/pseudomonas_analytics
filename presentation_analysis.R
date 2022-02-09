@@ -397,6 +397,8 @@ print(this_plot)
 
 ################################################################################
 #### Plotting our favorite condition GENE-LEVEL #####
+purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
+
 median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
 median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
@@ -439,19 +441,22 @@ print(plot_object)
 ################################################################################
 #### Plotting our favorite condition GENE-LEVEL #####
 
-to_plot <-
-	median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0"]
+to_plot <- median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0"]
+
+to_plot[FDR < 0.01, Significance := "FDR < 0.01"]
+to_plot[FDR < 0.001, Significance := "FDR < 0.001"]
+to_plot[FDR < 0.0001, Significance := "FDR < 0.0001"]
+
 
 plot_object <- ggplot(to_plot, aes(x = medLFC, y = -log10(FDR))) +
-	geom_point(aes(color = type), size = 2) +
+	geom_point(aes(color = Significance), size = 2) +
 	
 	xlim(median_melted_results[, min(medLFC)], median_melted_results[, max(medLFC)]) +
 	ylim(median_melted_results[, min(-log10(FDR))], median_melted_results[, max(-log10(FDR))]) +
 	
-	scale_color_manual(values = c("#D81B60", "#9e9e9e", "#212121", "#1E88E5", "#FFC107")) +
 	theme_bw(base_size = 12) +
 	geom_label_repel(
-		data = to_plot[FDR < 0.01],
+		data = to_plot[I <= 10],
 		aes(label = gene_name_stylized),
 		size = 5,
 		box.padding = unit(0.5, "lines"),
@@ -460,17 +465,22 @@ plot_object <- ggplot(to_plot, aes(x = medLFC, y = -log10(FDR))) +
 		max.overlaps = 100,
 		parse = TRUE
 	) +
-	ggtitle(expression(paste(bold("Plated "), italic("ex-vivo "), "10× dilution — ", bold("pelleted "), "inoculum ", t[0])))+
+	# ggtitle(expression(paste(bold("Plated "), italic("ex-vivo "), "10 × dilution — ", bold("pelleted "), "inoculum ", t[0])))+
+	# ggtitle(expression(paste(bold("Purine biosynthetis genes "), "enriched in lung sample.")))+
+		ggtitle("Top 10 Vulnerable Host Essential Genes")+
+
 	theme(
-		plot.title = element_text(hjust = 0.5, size = 20),
+		plot.title = element_text(size = 16),
 		axis.text = element_text(size = 14, color = "black"),
 		axis.title = element_text(size = 14, color = "black"),
-		legend.text = element_text(size = 8, color = "black"),
+		legend.text = element_text(size = 14, color = "black"),
 		legend.title = element_text(size = 14, color = "black"),
 		legend.position = "bottom"
 	)
 
+ggthemr("flat")
 print(plot_object)
+ggthemr_reset()
 
 ################################################################################
 #### Plotting our favorite condition GENE-LEVEL #####
