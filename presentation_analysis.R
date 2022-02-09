@@ -328,22 +328,6 @@ melted_results <-
 
 ################################################################################
 
-# guide_toss <-
-# 	melted_results[, .(sumFDR = sum(FDR)), by = .(name, gene_name, locus_tag)]
-#
-# setorder(guide_toss, sumFDR)
-#
-# guide_rejected <-
-# 	guide_toss[, .(maxsumFDR = max(sumFDR)), by = .(gene_name, locus_tag)]
-#
-# guide_rejected <-
-# 	guide_toss[guide_rejected, on = .(locus_tag, gene_name)][sumFDR == maxsumFDR, .(name)]
-#
-# melted_results_adjusted <-
-# 	melted_results[!(name %in% guide_rejected$name)]
-#
-# ################################################################################
-#
 median_melted_results <-
 	melted_results[, .(medLFC = median(LFC),
 										 FDR = stouffer(FDR)$p),
@@ -355,71 +339,6 @@ setorder(median_melted_results, FDR)
 
 ################################################################################
 
-plot(-log10(FDR) ~ LFC,
-		 data = melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"],
-		 pch = 20,
-		 main = "Guide-level: mouse_plated_10x_inoculum_dilution - inoculum_plated_t0")
-points(-log10(FDR) ~ LFC,
-			 data = melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0" &
-			 												type == "control"],
-			 pch = 20,
-			 col = "green")
-
-# plot(-log10(FDR)~medLFC, data = median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"], pch = 20, main = "Gene-level (Median guide): mouse_plated_10x_inoculum_dilution - inoculum_plated_t0")
-# abline(v = median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0" & type == "control"]$medLFC)
-
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-# control_CPM <- melt(data.table(data_CPM, keep.rownames = TRUE), id.vars = "rn")[rn %like% "Ctrl"]
-# control_CPM <- control_CPM[variable == "mouse_plated_10x_inoculum_dilution"]
-# setorder(control_CPM, rn)
-#
-# all_counts[spacer %like% "Ctrl", .(median_ctrl = median(count)), by = .(condition)][data_permut_check, on = .(condition==rn)][, .(condition, rep, variable, median_ctrl)]
-#
-# ################################################################################
-# ################################################################################
-#
-# mouse_grid_FDR <- dcast(median_melted_results, locus_tag + gene_name + type ~ condition, value.var = "FDR")
-# mouse_grid_LFC <- dcast(median_melted_results, locus_tag + gene_name + type ~ condition, value.var = "medLFC")
-#
-# ################################################################################
-# ################################################################################
-#
-# FDR_order <- median_melted_results[, .(mean_order = mean(FDR)), by = .(locus_tag, gene_name, type)]
-# setorder(FDR_order, mean_order, locus_tag)
-# FDR_order[, FDR := .I]
-# FDR_order[, medLFC := .I]
-# FDR_order <- FDR_order[, .(locus_tag, gene_name, type, FDR, medLFC)]
-# FDR_order[, condition := "order"]
-#
-# # glue the dummy variable onto the results matrix
-# # median_melted_results <- rbind(FDR_order, median_melted_results)
-#
-# ################################################################################
-# # construct the results then copy them to clipboard
-#
-# to_clip <- dcast(rbind(FDR_order, median_melted_results), locus_tag + gene_name + type ~ condition, value.var = "FDR")
-# setorder(to_clip, order)
-# to_clip <- to_clip[, -c("order")]
-# clipr::write_clip(to_clip)
-#
-# to_clip <- dcast(rbind(FDR_order, median_melted_results), locus_tag + gene_name + type ~ condition, value.var = "medLFC")
-# setorder(to_clip, order)
-# to_clip <- to_clip[, -c("order")]
-# clipr::write_clip(to_clip)
-#
-# plot(-log10(FDR) ~ medLFC, data = median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0"])
-
-##################################
 # Chi Square Test, did it work?
 did_it_work <-
 	data.table(data_CPM, keep.rownames = "spacer")[, .(spacer, Mouse_P1_003, Mouse_P1_015, Mouse_P1_016, Mouse_P1_017)]
@@ -475,42 +394,6 @@ this_plot <-
 
 ggthemr("dust")
 print(this_plot)
-
-################################################################################
-#### Plotting our favorite condition GUIDE-LEVEL #####
-# melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')~", offset)]
-# melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')~", offset)]
-# melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')~", offset)]
-#
-#
-# to_plot <-
-# 	melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"]
-#
-# plot_object <- ggplot(to_plot, aes(x = LFC, y = -log10(FDR))) +
-# 	geom_point(aes(color = type), size = 2) +
-# 	scale_color_manual(values = c("#D81B60", "#9e9e9e", "#212121", "#1E88E5", "#FFC107")) +
-# 	theme_bw(base_size = 12) +
-# 	geom_label_repel(
-# 		data = to_plot[FDR < 0.01],
-# 		aes(label = gene_name_stylized),
-# 		size = 5,
-# 		box.padding = unit(0.5, "lines"),
-# 		point.padding = unit(0.5, "lines"),
-# 		max.iter = 5000,
-# 		max.overlaps = 100,
-# 		parse = TRUE
-# 	) +
-# 	ggtitle("Mouse Plated 10x Inoculum Dilution vs. Inoculum Plated t0 (guides)") +
-# 	theme(
-# 		plot.title = element_text(hjust = 0.5, size = 20),
-# 		axis.text = element_text(size = 14, color = "black"),
-# 		axis.title = element_text(size = 14, color = "black"),
-# 		legend.text = element_text(size = 8, color = "black"),
-# 		legend.title = element_text(size = 14, color = "black"),
-# 		legend.position = "bottom"
-# 	)
-#
-# print(plot_object)
 
 ################################################################################
 #### Plotting our favorite condition GENE-LEVEL #####
