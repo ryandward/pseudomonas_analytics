@@ -33,17 +33,8 @@ all_counts <-
 all_counts <-
 	all_counts[promoter == "P1"][, .(spacer, condition, count)]
 
-# # # these conditions suck
-# rejected_conditions = c("Mouse_P1_001", "Mouse_P1_004")
-# #
-# all_counts <- all_counts[!(condition %in% rejected_conditions)]
-# exp_design <- exp_design[!(condition %in% rejected_conditions)]
-
 setorder(all_counts, condition)
 setorder(exp_design, condition)
-
-# exp_design[media == "Gent", media := "LB"]
-
 
 ################################################################################
 # Check for Data Integrity
@@ -65,32 +56,11 @@ data_grid_remelted <-
 print(data_grid_remelted[, .(median_count = median(count)), by = .(condition)][exp_design, on = .(condition)])
 
 ################################################################################
-# Create a correlation matrix for each condition in the remelted matrix.
-# It has to be dcasted, then remelted to have zeroes put into their appropriate spots!
 
-rm(crossjoin_correlation)
+data_grid_matrix <- data.matrix(data_grid[, -c("spacer")])
+row.names(data_grid_matrix) <- data_grid$spacer
+crossjoin_correlation_grid <- cor(data_grid_matrix)
 
-for (i in unique(data_grid_remelted$condition)) {
-	for (j in unique(data_grid_remelted$condition)) {
-		if (!(exists("crossjoin_correlation"))) {
-			crossjoin_correlation <-
-				data.table(i,
-									 j,
-									 cor(data_grid_remelted[condition == i]$count, data_grid_remelted[condition == j]$count))
-		}
-		else{
-			crossjoin_correlation <-
-				rbind(crossjoin_correlation, data.table(
-					i,
-					j,
-					cor(data_grid_remelted[condition == i]$count, data_grid_remelted[condition == j]$count)
-				))
-		}
-	}
-}
-
-crossjoin_correlation_grid <-
-	dcast(crossjoin_correlation, i ~ j, value.var = "V3")
 # Create a square matrix from the list of pairwise condition correlations.
 
 ################################################################################
@@ -98,9 +68,7 @@ crossjoin_correlation_grid <-
 all_counts <-
 	all_counts[condition != "inoculum"][, .(spacer, condition, count)]
 
-plot_grid <- crossjoin_correlation_grid
-plot_matrix <- data.matrix(plot_grid[, -1])
-rownames(plot_matrix) <- plot_grid$i
+plot_matrix <- crossjoin_correlation_grid
 
 break_halves <- length(unique(as.vector(plot_matrix)))
 
@@ -141,23 +109,19 @@ to_plot <- pheatmap(
 	show_rownames = TRUE,
 	show_colnames = TRUE,
 	clustering_method = "ward.D2",
-	clustering_distance_rows = "maximum",
-	clustering_distance_cols = "maximum"
+	# clustering_distance_rows = "maximum",
+	# clustering_distance_cols = "maximum"
 )
 
 print(to_plot)
 
 ################################################################################
 
-data_grid_matrix <- data.matrix(data_grid[, -c("spacer")])
-
-row.names(data_grid_matrix) <- data_grid$spacer
-
 data_group <-
 	factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")],
 				 levels = unique(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]))
 
-data_permut <-  model.matrix( ~ 0 + data_group)
+data_permut <- model.matrix( ~ 0 + data_group)
 
 colnames(data_permut) <- levels(data_group)
 
@@ -177,9 +141,9 @@ data_y <- DGEList(
 	genes = row.names(data_grid_matrix)
 )
 
-# data_keep <- filterByExpr(data_y, data_permut)
+data_keep <- filterByExpr(data_grid_matrix, data_group, large.n = 1000)
 
-data_keep <- rowSums(cpm(data_y) > 10) >= 5
+# data_keep <- rowSums(cpm(data_y) > 10) >= 5
 
 data_y <- data_y[data_keep, , keep.lib.sizes = FALSE]
 
@@ -259,7 +223,7 @@ to_plot <- pheatmap(
 	# cluster_cols = FALSE,
 	show_rownames = TRUE,
 	show_colnames = TRUE,
-	clustering_method = "ward.D",
+	clustering_method = "ward.D2",
 	labels_row = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
 	labels_col = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
 	clustering_distance_rows = "maximum",

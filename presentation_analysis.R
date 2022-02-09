@@ -210,7 +210,7 @@ to_plot <- pheatmap(
 	# cluster_cols = FALSE,
 	show_rownames = TRUE,
 	show_colnames = TRUE,
-	clustering_method = "ward.D",
+	clustering_method = "ward.D2",
 	clustering_distance_rows = "maximum",
 	clustering_distance_cols = "maximum"
 )
