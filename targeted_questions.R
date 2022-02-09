@@ -51,17 +51,18 @@ plot_CPM <- function(this_gene) {
 
 # save as 1000 x 750
 
-plot_CPM_error <- function(this_gene) {
+box_CPM <- function(this_gene) {
 	
-	this_gene <- "orfN"
 	to_plot <-
 		targeted_CPM[gene_name == this_gene |
 								 	locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose, offset, rep)]
 	
 	to_plot[, group := gsub("_[0-9]+$", "", verbose) ]
 	
+	to_plot$offset <- factor(as.character(to_plot$offset),
+													 levels = as.character(sort(unique(to_plot$offset))))
 	this_plot <-
-		ggplot(data = to_plot, aes(x = verbose, y = CPM, fill = offset)) +
+		ggplot(data = to_plot, aes(x = group, y = CPM, fill = offset)) +
 		geom_boxplot() + ggtitle("Box plot") +
 		ggtitle(paste("CPM for guides:", this_gene)) +
 		theme(axis.text.x = element_text(
@@ -72,7 +73,7 @@ plot_CPM_error <- function(this_gene) {
 	
 	ggthemr("flat")
 	print(this_plot)
-	rm(this_gene)
+	# rm(this_gene)
 	ggthemr_reset()
 	
 }

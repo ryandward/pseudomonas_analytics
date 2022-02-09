@@ -34,15 +34,16 @@ all_counts <-
 	all_counts[promoter == "P1"][, .(spacer, condition, count)]
 
 # # # these conditions suck
-# rejected_conditions = c("Mouse_P1_018")
-#
+# rejected_conditions = c("Mouse_P1_001", "Mouse_P1_004")
+# #
 # all_counts <- all_counts[!(condition %in% rejected_conditions)]
 # exp_design <- exp_design[!(condition %in% rejected_conditions)]
 
 setorder(all_counts, condition)
 setorder(exp_design, condition)
 
-exp_design[media == "Gent", media := "LB"]
+# exp_design[media == "Gent", media := "LB"]
+
 
 ################################################################################
 # Check for Data Integrity
@@ -271,6 +272,11 @@ print(to_plot)
 
 data_CPM_by_group <- copy(data_CPM)
 colnames(data_CPM_by_group) <- factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")])
+print(to_plot)
+
+
+
+
 
 ################################################################################
 # other diagnostic plots
@@ -511,6 +517,8 @@ print(this_plot)
 #### Plotting our favorite condition GUIDE-LEVEL #####
 melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')~", offset)]
 melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')~", offset)]
+melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')~", offset)]
+
 
 to_plot <-
 	melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"]
@@ -545,6 +553,7 @@ print(plot_object)
 #### Plotting our favorite condition GENE-LEVEL #####
 median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
 median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 
 to_plot <-
 	median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0"]
