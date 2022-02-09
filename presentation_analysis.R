@@ -152,8 +152,6 @@ data_y <- DGEList(
 data_keep <-
 	filterByExpr(data_grid_matrix, data_group, large.n = 1000)
 
-# data_keep <- rowSums(cpm(data_y) > 10) >= 5
-
 data_y <- data_y[data_keep, , keep.lib.sizes = FALSE]
 
 data_y <- calcNormFactors(data_y)
@@ -184,10 +182,6 @@ breaks <- c(
 
 breaks <- breaks[-length(breaks)]
 breaks <- c(breaks, 0.99999999)
-
-# plot_colors <-
-# 	c(colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves],
-# 		colorRampPalette(c("white", "#007ac1"))(break_halves)[-c(1, break_halves)])
 
 plot_colors <-
 	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
@@ -248,10 +242,6 @@ colnames(data_CPM_by_group) <-
 	factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")])
 print(to_plot)
 
-
-
-
-
 ################################################################################
 # other diagnostic plots
 plotMDS(log2(data_CPM_by_group))
@@ -259,14 +249,6 @@ plotQLDisp(data_fit)
 plotBCV(data_y)
 
 ################################################################################
-
-# contrast_levels <-
-# 	c(
-# 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-# 		"mouse_pellet_10x_inoculum_dilution - inoculum_pellet_t0",
-# 		"mouse_pellet_10x_inoculum_dilution - LB_pellet_6_generations"
-# 	)
 
 contrast_levels <-
 	c(
