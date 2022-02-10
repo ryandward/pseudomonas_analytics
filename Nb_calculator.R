@@ -1,6 +1,4 @@
-require('pacman')
-p_load(ggthemr, data.table, scales, edgeR, statmod, poolr, pheatmap, svglite, ggplot2, ggrepel, Rtsne, pracma, colourpicker, RColorBrewer)
-
+source("presentation_analysis.R")
 
 ############DENSITY PLOTS############################
 
@@ -209,6 +207,8 @@ print(this_plot)
 to_barplot <- botneck_summary[, .(verbose, Nb, control_Nb, knockdown_Nb)]
 to_barplot <- melt(to_barplot, id.vars = "verbose", variable = "group", value.name = "Nb")
 to_barplot <- to_barplot[group != "Nb"]
+to_barplot <- to_barplot[!is.na(Nb)]
+
 
 this_plot <- ggplot(
 	data = to_barplot, aes(x = verbose, y = Nb, fill = group)) +

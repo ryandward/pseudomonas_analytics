@@ -113,7 +113,7 @@ box_CPM_controls <- function() {
 		ggplot(data = to_plot, aes(x = Condition, y = log2(CPM), fill = name)) +
 		geom_boxplot() +
 		scale_fill_brewer(palette = "Accent") +
-		ggtitle(paste("Eight Random Guides"))
+		ggtitle(paste("Eight Random Control Guides"))
 
 	
 	ggthemr("flat")
