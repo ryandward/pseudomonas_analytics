@@ -20,54 +20,81 @@ annotated_key <- fread("annotated_key.tsv")
 exp_design <- fread("exp_design.tsv")
 exp_design <- exp_design[condition != "Undetermined"]
 
-inoculum_exp_design <- data.table(condition = "Inoculum",
-																	media = "inoculum",
-																	gDNA_source = "pellet",
-																	growth_condition = "t0",
-																	rep = 2,
-																	generations = 0)
+inoculum_exp_design <- 
+	data.table(
+		condition = "Inoculum",
+		media = "inoculum",
+		gDNA_source = "pellet",
+		growth_condition = "t0",
+		rep = 2,
+		generations = 0)
 
 exp_design <- rbind(exp_design, inoculum_exp_design)
 
-exp_design[,  verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
+exp_design[, verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
+
 setorder(exp_design, condition)
 
-all_counts <- fread("all_counts_seal.tsv", header = FALSE, col.names = c("promoter", "spacer", "count", "condition"))
-inoculum_counts <- fread("inoculum_counts.tsv", header = FALSE, col.names = c("promoter", "spacer", "count"))
+all_counts <- 
+	fread(
+		"all_counts_seal.tsv", 
+		header = FALSE, 
+		col.names = c(
+			"promoter", 
+			"spacer", 
+			"count", 
+			"condition"))
+
+inoculum_counts <- 
+	fread(
+		"inoculum_counts.tsv", 
+		header = FALSE, 
+		col.names = c(
+			"promoter", 
+			"spacer", 
+			"count"))
+
 inoculum_counts[, condition := "Inoculum"]
 
 all_counts <- rbind(all_counts, inoculum_counts)
+
 all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
 
 setorder(all_counts, condition)
+
 setorder(exp_design, condition)
 
 ################################################################################
 # Check for Data Integrity
 ################################################################################
 
-data_grid <- data.table::dcast(
-	all_counts,
-	spacer ~ condition,
-	value.var = "count",
-	fill = 0,
-	fun.aggregate = sum
-)
+data_grid <- 
+	data.table::dcast(
+		all_counts,
+		spacer ~ condition,
+		value.var = "count",
+		fill = 0,
+		fun.aggregate = sum)
 
 data_grid_remelted <-
 	melt(
 		data_grid,
 		variable.name = "condition",
 		value.name = "count",
-		id.vars = c('spacer')
-	)
+		id.vars = c('spacer'))
 
-print(data_grid_remelted[, .(median_count = median(count)), by = .(condition)][exp_design, on = .(condition)])
+# print(
+# 	data_grid_remelted[, .(
+# 		median_count = median(count)),
+# 		by = .(condition)][exp_design, 
+# 											 on = .(condition)])
 
 ################################################################################
 
-data_grid_matrix <- data.matrix(data_grid[,-c("spacer")])
+data_grid_matrix <- data.matrix(data_grid[, -c("spacer")])
+
 row.names(data_grid_matrix) <- data_grid$spacer
+
 crossjoin_correlation_grid <- cor(data_grid_matrix)
 
 # Create a square matrix from the list of pairwise condition correlations.
@@ -87,10 +114,10 @@ breaks <- c(
 			length.out = break_halves)[-break_halves],
 	seq(median(plot_matrix),
 			max(plot_matrix),
-			length.out = break_halves)
-)
+			length.out = break_halves))
 
 breaks <- breaks[-length(breaks)]
+
 breaks <- c(breaks, 0.99999999)
 
 plot_colors <-
@@ -99,6 +126,7 @@ plot_colors <-
 
 plot_colors <-
 	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
+
 plot_colors <- c(plot_colors, "dark grey")
 
 to_plot_title <- paste("Raw Count Condition Correlations")
@@ -127,8 +155,9 @@ print(to_plot)
 ################################################################################
 
 data_group <-
-	factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")],
-				 levels = unique(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]))
+	factor(
+		exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")],
+		levels = unique(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]))
 
 data_permut <- model.matrix(~ 0 + data_group)
 
@@ -137,8 +166,12 @@ colnames(data_permut) <- levels(data_group)
 rownames(data_permut) <- colnames(data_grid_matrix)
 
 data_permut_check <-
-	melt(data.table(data_permut, keep.rownames = "condition"), id.vars = "condition")[value ==
-																																											1][, .(condition, variable)]
+	melt(
+		data.table(
+			data_permut, 
+			keep.rownames = "condition"), 
+		id.vars = "condition")[value == 1][, .(condition, variable)]
+
 data_permut_check <-
 	data_permut_check[exp_design, on = .(condition == condition)]
 
@@ -150,8 +183,7 @@ data_y <- DGEList(
 	genes = row.names(data_grid_matrix)
 )
 
-data_keep <-
-	filterByExpr(data_grid_matrix, data_group, large.n = 1000)
+data_keep <- filterByExpr(data_grid_matrix, data_group, large.n = 1000)
 
 data_y <- data_y[data_keep, , keep.lib.sizes = FALSE]
 
@@ -186,6 +218,7 @@ breaks <- c(breaks, 0.99999999)
 
 plot_colors <-
 	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
+
 plot_colors <- c(plot_colors, "dark grey")
 
 to_plot_title <-
@@ -238,9 +271,13 @@ print(to_plot)
 
 # colnames(data_CPM) <- factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")])
 
-data_CPM_by_group <- copy(data_CPM)
-colnames(data_CPM_by_group) <-
-	factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")])
+data_CPM_by_group <- 
+	copy(data_CPM)
+
+colnames(data_CPM_by_group) <- 
+	factor(exp_design[,  paste(
+		media, gDNA_source, growth_condition, sep = "_")])
+
 print(to_plot)
 
 ################################################################################
@@ -264,22 +301,28 @@ data_contrast <- makeContrasts(contrasts = contrast_levels,
 ################################################################################
 
 results_FDR <- all_counts[, .(genes = unique(spacer))]
+
 results_LFC <- all_counts[, .(genes = unique(spacer))]
 
 ################################################################################
 
 for (i in 1:ncol(data_contrast)) {
+	
 	results <- glmQLFTest(data_fit, contrast = data_contrast[, i])
+	
 	results <- topTags(results, n = Inf)
+	
 	results <- data.table(results$table)
 	
 	print(paste("Processing results for", contrast_levels[i], "..."))
 	
 	results_FDR <- results[, .(genes, FDR)][results_FDR, on = .(genes)]
+	
 	setnames(results_FDR, "FDR", contrast_levels[i])
 	
 	results_LFC <-
 		results[, .(genes, logFC)][results_LFC, on = .(genes)]
+	
 	setnames(results_LFC, "logFC", contrast_levels[i])
 }
 
@@ -344,7 +387,7 @@ setorder(median_melted_results, FDR)
 
 ################################################################################
 
-# # Chi Square Test, did it work?
+## # Chi Square Test, did it work?
 # did_it_work <-
 # 	data.table(data_CPM, keep.rownames = "spacer")[, .(spacer, Mouse_P1_003, Mouse_P1_015, Mouse_P1_016, Mouse_P1_017)]
 # 
