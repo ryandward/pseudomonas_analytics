@@ -1,82 +1,82 @@
-source("presentation_analysis.R")
-
-############DENSITY PLOTS############################
-
-exp_design <- fread("exp_design.tsv")
-exp_design <- exp_design[condition != "Undetermined"]
-
-inoculum_exp_design <- data.table(condition = "Inoculum",
-																	media = "inoculum",
-																	gDNA_source = "pellet",
-																	growth_condition = "t0",
-																	rep = 2,
-																	generations = 0)
-
-exp_design <- rbind(exp_design, inoculum_exp_design)
-
-exp_design[,  verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
-setorder(exp_design, condition)
-
-all_counts <- fread("all_counts_seal.tsv", header = FALSE, col.names = c("promoter", "spacer", "count", "condition"))
-inoculum_counts <- fread("inoculum_counts.tsv", header = FALSE, col.names = c("promoter", "spacer", "count"))
-inoculum_counts[, condition := "Inoculum"]
-
-all_counts <- rbind(all_counts, inoculum_counts)
-all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
-
-setorder(all_counts, condition)
-
-data_grid <- data.table::dcast(
-	all_counts, 
-	spacer ~ condition,
-	value.var = "count",
-	fun.aggregate = sum,
-	fill = 0)
-
-data_grid_remelted <- melt(
-	data_grid, 
-	variable.name = "condition", 
-	value.name = "count", 
-	id.vars = "spacer")
-
-data_grid_matrix <- data.matrix(
-	data_grid[, -c("spacer")])
-
-row.names(data_grid_matrix) <- data_grid$spacer
-
-data_group <- factor(
-	exp_design[, paste(media, gDNA_source, growth_condition, sep = "_")],
-	levels = unique(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]))
-
-data_permut <- model.matrix( ~ 0 + data_group)
-
-colnames(data_permut) <- levels(data_group)
-rownames(data_permut) <- colnames(data_grid_matrix)
-
-data_permut_check <- melt(
-	data.table(
-		data_permut,
-		keep.rownames = "condition"),
-	id.vars = "condition")[value == 1][, .(condition, variable)]
-
-data_permut_check <- data_permut_check[exp_design, on = .(condition==condition)]
-
-data_y <- DGEList(counts = data_grid_matrix, 
-									group = data_group, 
-									genes = row.names(data_grid_matrix))
-
-data_keep <- rowSums(cpm(data_y) > 10) >= 5
-
-data_y <- data_y[data_keep, , keep.lib.sizes = FALSE]
-data_y <- calcNormFactors(data_y)
-data_y <- estimateDisp(data_y, data_permut)
-
-data_fit <- glmQLFit(data_y, data_permut, robust = TRUE)
-
-data_CPM <- cpm(data_y, prior.count = 0)
-
-#################################################################
-#################################################################
+# source("presentation_analysis.R")
+# 
+# ############DENSITY PLOTS############################
+# 
+# exp_design <- fread("exp_design.tsv")
+# exp_design <- exp_design[condition != "Undetermined"]
+# 
+# inoculum_exp_design <- data.table(condition = "Inoculum",
+# 																	media = "inoculum",
+# 																	gDNA_source = "pellet",
+# 																	growth_condition = "t0",
+# 																	rep = 2,
+# 																	generations = 0)
+# 
+# exp_design <- rbind(exp_design, inoculum_exp_design)
+# 
+# exp_design[,  verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
+# setorder(exp_design, condition)
+# 
+# all_counts <- fread("all_counts_seal.tsv", header = FALSE, col.names = c("promoter", "spacer", "count", "condition"))
+# inoculum_counts <- fread("inoculum_counts.tsv", header = FALSE, col.names = c("promoter", "spacer", "count"))
+# inoculum_counts[, condition := "Inoculum"]
+# 
+# all_counts <- rbind(all_counts, inoculum_counts)
+# all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
+# 
+# setorder(all_counts, condition)
+# 
+# data_grid <- data.table::dcast(
+# 	all_counts, 
+# 	spacer ~ condition,
+# 	value.var = "count",
+# 	fun.aggregate = sum,
+# 	fill = 0)
+# 
+# data_grid_remelted <- melt(
+# 	data_grid, 
+# 	variable.name = "condition", 
+# 	value.name = "count", 
+# 	id.vars = "spacer")
+# 
+# data_grid_matrix <- data.matrix(
+# 	data_grid[, -c("spacer")])
+# 
+# row.names(data_grid_matrix) <- data_grid$spacer
+# 
+# data_group <- factor(
+# 	exp_design[, paste(media, gDNA_source, growth_condition, sep = "_")],
+# 	levels = unique(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]))
+# 
+# data_permut <- model.matrix( ~ 0 + data_group)
+# 
+# colnames(data_permut) <- levels(data_group)
+# rownames(data_permut) <- colnames(data_grid_matrix)
+# 
+# data_permut_check <- melt(
+# 	data.table(
+# 		data_permut,
+# 		keep.rownames = "condition"),
+# 	id.vars = "condition")[value == 1][, .(condition, variable)]
+# 
+# data_permut_check <- data_permut_check[exp_design, on = .(condition==condition)]
+# 
+# data_y <- DGEList(counts = data_grid_matrix, 
+# 									group = data_group, 
+# 									genes = row.names(data_grid_matrix))
+# 
+# data_keep <- rowSums(cpm(data_y) > 10) >= 5
+# 
+# data_y <- data_y[data_keep, , keep.lib.sizes = FALSE]
+# data_y <- calcNormFactors(data_y)
+# data_y <- estimateDisp(data_y, data_permut)
+# 
+# data_fit <- glmQLFit(data_y, data_permut, robust = TRUE)
+# 
+# data_CPM <- cpm(data_y, prior.count = 0)
+# 
+# #################################################################
+# #################################################################
 
 base_t0 = "Mouse_P1_003"
 
@@ -208,13 +208,16 @@ to_barplot <- botneck_summary[, .(verbose, Nb, control_Nb, knockdown_Nb)]
 to_barplot <- melt(to_barplot, id.vars = "verbose", variable = "group", value.name = "Nb")
 to_barplot <- to_barplot[group != "Nb"]
 to_barplot <- to_barplot[!is.na(Nb)]
-
+to_barplot[, c("A", "B", "C", "D", "E", "F", "G") := tstrsplit(verbose, "_", type.convert = TRUE, fixed = TRUE)]
+to_barplot[,index := 1:.N, by = .(group)]
+to_barplot[, Label := paste0(A, "_", index)]
 
 this_plot <- ggplot(
-	data = to_barplot, aes(x = verbose, y = Nb, fill = group)) +
+	data = to_barplot, aes(x = Label, y = Nb, fill = group)) +
 	geom_bar(stat = "identity", position = position_dodge()) +
 	scale_fill_brewer(palette = "Paired") +
 	ggtitle(paste("Bottleneck Number (Effective Population) by Condition: Controls, Knockdowns.")) +
+	ylim(c(0,160000))+
 	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1))
 
 ggthemr("flat")
