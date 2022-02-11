@@ -295,8 +295,9 @@ contrast_levels <-
 		"inoculum_plated_t0 - inoculum_pellet_t0"
 	)
 
-data_contrast <- makeContrasts(contrasts = contrast_levels,
-															 levels = data_permut)
+data_contrast <- makeContrasts(
+	contrasts = contrast_levels,
+	levels = data_permut)
 
 ################################################################################
 
@@ -377,9 +378,10 @@ melted_results <-
 ################################################################################
 
 median_melted_results <-
-	melted_results[, .(medLFC = median(LFC),
-										 FDR = stouffer(FDR)$p),
-								 by = .(locus_tag, gene_name, type, condition)]
+	melted_results[, .(
+		medLFC = median(LFC),
+		FDR = stouffer(FDR)$p),
+		by = .(locus_tag, gene_name, type, condition)]
 
 ################################################################################
 
