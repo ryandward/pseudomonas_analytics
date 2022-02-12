@@ -1,41 +1,11 @@
 source("presentation_analysis.R")
 
-CPM_melted <-
-	melt(
-		data.table(data_CPM, keep.rownames = "spacer"),
-		id.vars = "spacer",
-		variable.name = "condition",
-		value.name = "CPM"
-	)
 
-annotated_key <- fread("annotated_key.tsv")
+##################################################################################
+# TAKE A SUB-SELECTION OF THE GROUPED CPM DATA THAT WE ARE INTERSETED IN EXAMINING
+targeted_CPM <- grouped_CPM[
+	condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017", "Inoculum", "Mouse_P1_003")]  
 
-targeted_CPM <- CPM_melted[condition %in% c("Inoculum",
-																						"Mouse_P1_003",
-																						# "Mouse_P1_006",
-																						"Mouse_P1_015",
-																						"Mouse_P1_016",
-																						"Mouse_P1_017")]
-
-targeted_CPM[condition %in% c("Inoculum", "Mouse_P1_003"),  
-						 # fancy_condition := 'paste0(bold("pelleted "), "inoculum ", t[0])']
-						 Condition := 'Pelleted inoculum t_0']
-						 
-
-targeted_CPM[condition == "Mouse_P1_006",  
-						 # fancy_condition := 'paste0(bold("plated "), "inoculum ", t[0])']
-						 Condition := 'Plated inoculum t_0']
-						 
-targeted_CPM[condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017"),  
-						 # fancy_condition := 'paste0(bold("Plated "), italic("ex-vivo "), "10× dilution")']
-						 Condition := 'Plated ex-vivo 10× dilution']
-						 
-targeted_CPM <- exp_design[targeted_CPM, on = .(condition)]
-targeted_CPM <- annotated_key[targeted_CPM, on = .(name == spacer)]
-
-targeted_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
-
-targeted_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
 
 plot_CPM <- function(this_gene) {
 	to_plot <-
@@ -123,7 +93,7 @@ box_CPM_controls <- function() {
 }
 
 
-plot_CPM_controls <- function() {
+bar_CPM_controls <- function() {
 	random_controls <-
 		CPM_melted[spacer %like% "Ctrl", .(spacer = unique(spacer))][sample(.N, 8)]
 	

@@ -245,7 +245,9 @@ to_plot <- pheatmap(
 
 print(to_plot)
 
+################################################################################
 # label with what the sequencing experiment actually is
+
 to_plot <- pheatmap(
 	plot_matrix,
 	col = plot_colors,
@@ -269,7 +271,7 @@ to_plot <- pheatmap(
 
 print(to_plot)
 
-# colnames(data_CPM) <- factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")])
+################################################################################
 
 data_CPM_by_group <- 
 	copy(data_CPM)
@@ -282,6 +284,7 @@ print(to_plot)
 
 ################################################################################
 # other diagnostic plots
+
 plotMDS(log2(data_CPM_by_group))
 plotQLDisp(data_fit)
 plotBCV(data_y)
@@ -388,68 +391,61 @@ median_melted_results <-
 setorder(median_melted_results, FDR)
 
 ################################################################################
-
-## # Chi Square Test, did it work?
-# did_it_work <-
-# 	data.table(data_CPM, keep.rownames = "spacer")[, .(spacer, Mouse_P1_003, Mouse_P1_015, Mouse_P1_016, Mouse_P1_017)]
-# 
-# did_it_work[, t0 := Mouse_P1_003]
-# did_it_work[, tf := Mouse_P1_015 + Mouse_P1_016 + Mouse_P1_017]
-# did_it_work <- did_it_work[, .(spacer, t0, tf)]
-# did_it_work <-
-# 	melt(
-# 		did_it_work,
-# 		id.vars = "spacer",
-# 		variable.name = "timing",
-# 		value.name = "CPM"
-# 	)
-# did_it_work[!spacer %like% "Ctrl", spacer := "knockdown"]
-# did_it_work[spacer %like% "Ctrl", spacer := "control"]
-# did_it_work <-
-# 	did_it_work[, .(sumCPM = sum(CPM)), by = .(spacer, timing)]
-# did_it_work <-
-# 	dcast(did_it_work, spacer ~ timing, value.var = "sumCPM")
-# 
-# did_it_work_matrix <- data.matrix(did_it_work[,-1])
-# rownames(did_it_work_matrix) <- did_it_work[, spacer]
-# chisq.test(did_it_work_matrix)
-# 
-# did_it_work <-
-# 	data.table(did_it_work_matrix, keep.rownames = "type")
-# did_it_work <-
-# 	melt(
-# 		did_it_work,
-# 		variable.name = "timing",
-# 		value.name = "sum_CPM",
-# 		id.vars = "type"
-# 	)
-# 
-# did_it_work[, sum_CPM := did_it_work[i  = type == "control",
-# 																		 j  = .(ctrl_sum_CPM = sum_CPM),
-# 																		 by = .(timing)][i  = .SD,
-# 																		 								on = .(timing),
-# 																		 								j  = .(sum_CPM = sum_CPM / ctrl_sum_CPM),
-# 																		 								by = .EACHI]$sum_CPM]
-# 
-# this_plot <-
-# 	ggplot(data = did_it_work, aes(x = timing , y = sum_CPM, fill = type)) +
-# 	geom_bar(stat = "identity", position = position_dodge()) +
-# 	scale_fill_brewer(palette = "Paired") +
-# 	ggtitle(paste("Barplot. Did it work? Controls, Knockdowns.")) +
-# 	theme(axis.text.x = element_text(
-# 		angle = 55,
-# 		vjust = 1.0,
-# 		hjust = 1
-# 	))
-# 
-# ggthemr("dust")
-# print(this_plot)
-
-################################################################################
 # add fancy names to median melted results
 
 median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
 median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 
-###
+################################################################################
+################################################################################
+################################################################################
+# USE DESCRIPTIVE TERMINOLOGY TO DESCRIBE THE GROUPS OF SAMPLES
+# EVENTUALLY THIS NEEDS TO BE MOVED INTO A NEW FILE
+# PERHAPS STICK IT INTO A SIMPLE DEFINITIONS FILE
+# PERHAPS 2 COLUMNS DEFINING WHICH SAMPLES BELONG TO GROUPS
+################################################################################
+################################################################################
+################################################################################
+# melt CPM for later use
+
+CPM_melted <- melt(
+	data.table(
+		data_CPM, 
+		keep.rownames = "spacer"), 
+	id.vars = "spacer", 
+	variable.name = "condition", 
+	value.name = "CPM")
+
+grouped_CPM <- copy(CPM_melted)
+
+grouped_CPM[
+	condition %in% c("Inoculum", "Mouse_P1_003"),  
+	Condition := 'Pelleted inoculum t_0']
+
+# grouped_CPM[
+# 	condition == "Mouse_P1_006",
+# 	Condition := 'Plated inoculum t_0']
+
+grouped_CPM[
+	condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017"),  
+	Condition := 'Plated ex-vivo 10× dilution']
+
+grouped_CPM[
+	condition %in% c("Mouse_P1_018", "Mouse_P1_019", "Mouse_P1_020", "Mouse_P1_021", "Mouse_P1_022"),  
+	Condition := 'Plated ex-vivo 100× dilution']
+
+grouped_CPM[
+	condition %in% c("Mouse_P1_007", "Mouse_P1_008"),  
+	Condition := 'Pelleted ex-vivo 10× dilution']
+
+grouped_CPM <- exp_design[grouped_CPM, on = .(condition)]
+
+grouped_CPM <- annotated_key[grouped_CPM, on = .(name == spacer)]
+
+grouped_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
+
+grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
+
+
+################################################################################
