@@ -1,14 +1,7 @@
 source("presentation_analysis.R")
 purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
 
-################################################################################
-# add fancy names to median melted results
-
-median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
-median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
-median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
-
-################################################################################
+#############################################################################
 # prepare data for volcano plots
 
 to_plot <- median_melted_results[

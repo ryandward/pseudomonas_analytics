@@ -445,3 +445,11 @@ setorder(median_melted_results, FDR)
 # ggthemr("dust")
 # print(this_plot)
 
+################################################################################
+# add fancy names to median melted results
+
+median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
+median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+
+###

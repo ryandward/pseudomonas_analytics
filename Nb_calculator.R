@@ -217,7 +217,7 @@ this_plot <- ggplot(
 	geom_bar(stat = "identity", position = position_dodge()) +
 	scale_fill_brewer(palette = "Paired") +
 	ggtitle(paste("Bottleneck Number (Effective Population) by Condition: Controls, Knockdowns.")) +
-	ylim(c(0,160000))+
+	ylim(c(0, 160000)) +
 	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1))
 
 ggthemr("flat")
@@ -251,7 +251,7 @@ botneck_summary <- botneck_summary[
 
 botneck_summary <- exp_design[botneck_summary, on = .(condition)]
 botneck_summary[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
-botneck_summary[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep="_")]
+botneck_summary[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
 
 #################################################################
 for (i in botneck_summary[generations > 0, condition]) {
