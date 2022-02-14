@@ -447,5 +447,9 @@ grouped_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, 
 
 grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
 
-
 ################################################################################
+
+fwrite(
+	x = median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0"],
+	file = "output/10x_dilution_CFU__vs__t0_pellet.tsv",
+	sep = "\t")
