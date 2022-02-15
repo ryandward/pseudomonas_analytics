@@ -11,7 +11,8 @@ p_load(
 	ggrepel,
 	colourpicker,
 	RColorBrewer,
-	poolr
+	poolr,
+	statmod
 )
 
 
