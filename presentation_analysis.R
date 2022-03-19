@@ -1,3 +1,7 @@
+# counting guidelines: fastq_operations/link_promoters_guides_then_count.sh 
+# GLBRC work directory: /home/GLBRCORG/ryan.d.ward/MouseLib
+# GLBRC work directory, replicates: /home/GLBRCORG/ryan.d.ward/experiment_35362
+
 require('pacman')
 
 p_load(
