@@ -1,6 +1,8 @@
-source("integration_analysis.R")
+source("deep_integration_analysis.R")
 
 library(pacman)
+
+this.confidence <- 0.9
 
 p_load(
 	pracma, 
@@ -71,15 +73,17 @@ grouped_densities_summary <-
 
 grouped_densities_summary[is.nan(sd_Y), `:=`(sd_Y = 0, sem_Y = 0)]
 
-grouped_densities_summary$CI_lower <- grouped_densities_summary$mean_Y + qt((1 - 0.85)/2, df = grouped_densities_summary$N - 1)*grouped_densities_summary$sem_Y
+grouped_densities_summary$CI_lower <- grouped_densities_summary$mean_Y + qt((1 - this.confidence)/2, df = grouped_densities_summary$N - 1)*grouped_densities_summary$sem_Y
 
-grouped_densities_summary$CI_upper <- grouped_densities_summary$mean_Y - qt((1 - 0.85)/2, df = grouped_densities_summary$N - 1)*grouped_densities_summary$sem_Y
+grouped_densities_summary$CI_upper <- grouped_densities_summary$mean_Y - qt((1 - this.confidence)/2, df = grouped_densities_summary$N - 1)*grouped_densities_summary$sem_Y
 
 grouped_densities_summary[is.na(CI_lower), CI_lower := mean_Y]
 
 ########################################################################################
 
 for (i in grouped_densities_summary[, unique(Condition)]) {
+	
+	this.rep.count = grouped_densities[, .N/1024, by = .(Condition)][Condition == i]$V1
 	
 	for (j in grouped_densities_summary[, unique(type)]) {
 
@@ -110,7 +114,7 @@ for (i in grouped_densities_summary[, unique(Condition)]) {
 			grouped_densities_summary[, min(CI_lower, na.rm = T)], 
 			grouped_densities_summary[, max(CI_upper, na.rm = T)]) +
 			ggtitle(
-				bquote(Log[2] ~ counts ~ per ~ million. ~ bold(.(i)) ~ italic(.(j)) ~ guides. )) +
+				bquote(Log[2] ~ counts ~ per ~ million. ~ bold(.(i)) ~ italic(.(j)) ~ guides. ~ .(this.rep.count) ~ reps. )) +
 			xlab(
 				bquote(Log[2] ~ counts ~ per ~ million)) +
 			ylab("Density")

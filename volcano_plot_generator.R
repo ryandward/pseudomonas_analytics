@@ -1,11 +1,12 @@
-source("presentation_analysis.R")
+source("integration_analysis.R")
 purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
 
 #############################################################################
 # prepare data for volcano plots
 
-to_plot <- median_melted_results[
-	condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0"]
+this.contrast <- "mouse vs plate"
+
+to_plot <- median_melted_results[condition == this.contrast]
 
 
 to_plot[FDR < 0.01, Significance := "FDR < 0.01"]
@@ -19,6 +20,7 @@ to_plot[index <= 10, `Hits` := "Top ten (Non-purine)"]
 ################################################################################
 # First plot. Colors for FALSE DISCOVERY RATE GRADIENTS
 
+
 plot_object <- 
 	ggplot(
 		data = to_plot, 
@@ -26,13 +28,12 @@ plot_object <-
 	geom_point(
 		aes(color = Significance), size = 2) +
 	xlim(
-		median_melted_results[, min(medLFC)], median_melted_results[, max(medLFC)]) +
+		median_melted_results[type != "control", min(medLFC)], median_melted_results[type != "control", max(medLFC)]) +
 	ylim(
-		median_melted_results[, min(-log10(FDR))], median_melted_results[, max(-log10(FDR))]) +
+		median_melted_results[type != "control", min(-log10(FDR))], median_melted_results[type != "control", max(-log10(FDR))]) +
 	theme_bw(
 		base_size = 12) +
-	ggtitle(
-		bquote(Mice ~ infected ~ with ~ bold("10x dilution CFU") ~ versus ~ bold("inoculum.") ~ "False discovery rates.")) +
+	ggtitle(this_condition) +
 	theme(
 		plot.title = element_text(size = 16),
 		axis.text = element_text(size = 14, color = "black"),
@@ -58,14 +59,13 @@ plot_object <-
 		aes(color = Pathway), 
 		size = 2) +
 	xlim(
-		median_melted_results[, min(medLFC)], median_melted_results[, max(medLFC)]) +
+		median_melted_results[type != "control", min(medLFC)], median_melted_results[type != "control", max(medLFC)]) +
 	ylim(
-		median_melted_results[, min(-log10(FDR))], median_melted_results[, max(-log10(FDR))]) +
+		median_melted_results[type != "control", min(-log10(FDR))], median_melted_results[type != "control", max(-log10(FDR))]) +
 	theme_bw(
 		base_size = 12) +
-	ggtitle(
-		bquote(Mice ~ infected ~ with ~ bold("10x dilution CFU") ~ versus ~ bold("inoculum.") ~ Pathway ~ enrichment.)) +
-	theme(
+		ggtitle(this_condition) +
+			theme(
 		plot.title = element_text(size = 16),
 		axis.text = element_text(size = 14, color = "black"),
 		axis.title = element_text(size = 14, color = "black"),
@@ -73,7 +73,7 @@ plot_object <-
 		legend.title = element_text(size = 14, color = "black"),
 		legend.position = "bottom") + 
 	geom_hline(
-		yintercept = 2, 
+		yintercept = 1.30103, 
 		linetype = "dashed", 
 		color = "red") +
 	geom_label_repel(
@@ -99,14 +99,13 @@ plot_object <-
 		aes(color = `Hits`), 
 		size = 2) +
 	xlim(
-		median_melted_results[, min(medLFC)], median_melted_results[, max(medLFC)]) +
+		median_melted_results[type != "control", min(medLFC)], median_melted_results[type != "control", max(medLFC)]) +
 	ylim(
-		median_melted_results[, min(-log10(FDR))], median_melted_results[, max(-log10(FDR))]) +
+		median_melted_results[type != "control", min(-log10(FDR))], median_melted_results[type != "control", max(-log10(FDR))]) +
 	theme_bw(
 		base_size = 12) +
-	ggtitle(
-		bquote(Mice ~ infected ~ with ~ bold("10x dilution CFU") ~ versus ~ bold("inoculum.") ~ "Top ten non-purine hits.")) +
-	theme(
+		ggtitle(this.contrast) +
+			theme(
 		plot.title = element_text(size = 16),
 		axis.text = element_text(size = 14, color = "black"),
 		axis.title = element_text(size = 14, color = "black"),
@@ -114,11 +113,11 @@ plot_object <-
 		legend.title = element_text(size = 14, color = "black"),
 		legend.position = "bottom") + 
 	geom_hline(
-		yintercept = 2, 
+		yintercept = 1.30103, 
 		linetype = "dashed", 
 		color = "red") +
 	geom_label_repel(
-		data = to_plot[!is.na(Hits)],
+		data = to_plot[FDR < 0.01],
 		aes(label = gene_name_stylized),
 		size = 5,
 		box.padding = unit(0.5, "lines"),
