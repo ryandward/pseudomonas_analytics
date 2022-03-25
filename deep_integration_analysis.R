@@ -41,7 +41,7 @@ inoculum_exp_design <-
 		rep = 2,
 		generations = 0)
 
-exp_design2 <- fread("exp_design2.tsv")
+exp_design2 <- fread("deep_exp_design2.tsv")
 
 exp_design <- rbind(exp_design, inoculum_exp_design, exp_design2)
 
@@ -319,9 +319,9 @@ plotBCV(data_y)
 ################################################################################
 
 contrast_levels <-
-	c("LB_plated_madison_6_generations - inoculum_pellet_t0",
+	c("LB_plated_6_generations - inoculum_pellet_t0",
 		# "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-		"mouse_plated_10x_inoculum_dilution - LB_plated_madison_6_generations",
+		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
 		# "LB_plated_madison_6_generations - LB_plated_madison_t0",
 		# "LB_plated_madison_t0 - inoculum_pellet_t0",
 		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
@@ -451,10 +451,6 @@ grouped_CPM[
 	condition %in% c("Inoculum", "Mouse_P1_003"),  
 	Condition := 'Pelleted inoculum t_0']
 
-# grouped_CPM[
-# 	condition == "Mouse_P1_006",
-# 	Condition := 'Plated inoculum t_0']
-
 grouped_CPM[
 	condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017"),  
 	Condition := 'Plated ex-vivo 10× dilution']
@@ -468,11 +464,11 @@ grouped_CPM[
 	Condition := 'Pelleted ex-vivo 10× dilution']
 
 grouped_CPM[
-	condition %in% c("dJMP2", "dJMP3"),  
+	condition %in% c("dJMP2", "dJMP3", "Mouse_P1_006"),  
 	Condition := 'Inoculum grown on plates']
 
 grouped_CPM[
-	condition %in% c("dJMP4", "dJMP5"),  
+	condition %in% c("dJMP4", "dJMP5", "Mouse_P1_004"),  
 	Condition := 'Inoculum plated after 6 generations growth in-vitro']
 
 grouped_CPM <- exp_design[grouped_CPM, on = .(condition)]
@@ -486,9 +482,14 @@ grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, s
 
 ################################################################################
 
-melted_results[condition == "LB_plated_madison_6_generations - inoculum_pellet_t0", condition := "plate vs pellet"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_madison_6_generations", condition := "mouse vs plate"]
+melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs pellet"]
+melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
 melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs pellet"]
+
+median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs pellet"]
+median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
+median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs pellet"]
+
 
 
 
