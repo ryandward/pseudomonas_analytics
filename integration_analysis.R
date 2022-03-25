@@ -317,7 +317,8 @@ contrast_levels <-
 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
 		"mouse_plated_10x_inoculum_dilution - LB_plated_madison_6_generations",
 		"LB_plated_madison_6_generations - LB_plated_madison_t0",
-		"LB_plated_madison_t0 - inoculum_pellet_t0")
+		"LB_plated_madison_t0 - inoculum_pellet_t0",
+		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
 
 data_contrast <- makeContrasts(
 	contrasts = contrast_levels,
