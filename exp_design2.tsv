@@ -1,0 +1,5 @@
+condition	media	gDNA_source	growth_condition	rep	generations
+dJMP2	LB	plated_madison	t0	1	0
+dJMP3	LB	plated_madison	t0	2	0
+dJMP4	LB	plated_madison	6_generations	1	6
+dJMP5	LB	plated_madison	6_generations	2	6

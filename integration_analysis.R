@@ -1,3 +1,7 @@
+# counting guidelines: fastq_operations/link_promoters_guides_then_count.sh 
+# GLBRC work directory: /home/GLBRCORG/ryan.d.ward/MouseLib
+# GLBRC work directory, replicates: /home/GLBRCORG/ryan.d.ward/experiment_35362
+
 require('pacman')
 
 p_load(
@@ -21,6 +25,7 @@ annotated_key <- fread("annotated_key.tsv")
 exp_design <- fread("exp_design.tsv")
 exp_design <- exp_design[condition != "Undetermined"]
 
+
 inoculum_exp_design <- 
 	data.table(
 		condition = "Inoculum",
@@ -30,11 +35,15 @@ inoculum_exp_design <-
 		rep = 2,
 		generations = 0)
 
-exp_design <- rbind(exp_design, inoculum_exp_design)
+exp_design2 <- fread("exp_design2.tsv")
+
+exp_design <- rbind(exp_design, inoculum_exp_design, exp_design2)
 
 exp_design[, verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
 
 setorder(exp_design, condition)
+
+##########################################################################################
 
 all_counts <- 
 	fread(
@@ -55,15 +64,29 @@ inoculum_counts <-
 			"spacer", 
 			"count"))
 
+all_counts2 <- fread(
+	"all_counts_seal2.tsv",
+	header = FALSE,
+	col.names = c(
+		"count",
+		"condition",
+		"spacer"))
+
 inoculum_counts[, condition := "Inoculum"]
 
 all_counts <- rbind(all_counts, inoculum_counts)
 
 all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
 
+
+all_counts <- rbind(all_counts, all_counts2)
+
 setorder(all_counts, condition)
 
 setorder(exp_design, condition)
+
+all_counts <-
+	all_counts[condition %in% exp_design$condition] [, .(spacer, condition, count)]
 
 ################################################################################
 # Check for Data Integrity
@@ -101,9 +124,6 @@ crossjoin_correlation_grid <- cor(data_grid_matrix)
 # Create a square matrix from the list of pairwise condition correlations.
 
 ################################################################################
-
-all_counts <-
-	all_counts[condition != "inoculum"][, .(spacer, condition, count)]
 
 plot_matrix <- crossjoin_correlation_grid
 
@@ -293,11 +313,11 @@ plotBCV(data_y)
 ################################################################################
 
 contrast_levels <-
-	c(
+	c("LB_plated_madison_6_generations - inoculum_pellet_t0",
 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
-		"inoculum_plated_t0 - inoculum_pellet_t0"
-	)
+		"mouse_plated_10x_inoculum_dilution - LB_plated_madison_6_generations",
+		"LB_plated_madison_6_generations - LB_plated_madison_t0",
+		"LB_plated_madison_t0 - inoculum_pellet_t0")
 
 data_contrast <- makeContrasts(
 	contrasts = contrast_levels,
@@ -395,7 +415,7 @@ setorder(median_melted_results, FDR)
 # add fancy names to median melted results
 
 median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
-median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+# median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 
 ################################################################################
@@ -440,6 +460,14 @@ grouped_CPM[
 	condition %in% c("Mouse_P1_007", "Mouse_P1_008"),  
 	Condition := 'Pelleted ex-vivo 10× dilution']
 
+grouped_CPM[
+	condition %in% c("dJMP2", "dJMP3"),  
+	Condition := 'Inoculum grown on plates']
+
+grouped_CPM[
+	condition %in% c("dJMP4", "dJMP5"),  
+	Condition := 'Inoculum plated after 6 generations growth in-vitro']
+
 grouped_CPM <- exp_design[grouped_CPM, on = .(condition)]
 
 grouped_CPM <- annotated_key[grouped_CPM, on = .(name == spacer)]
@@ -450,3 +478,10 @@ grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, s
 
 
 ################################################################################
+
+
+
+
+
+
+
