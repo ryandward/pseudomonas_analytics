@@ -1,10 +1,10 @@
-source("integration_analysis.R")
+source("deep_integration_analysis.R")
 purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
 
 #############################################################################
 # prepare data for volcano plots
 
-this.contrast <- "mouse vs plate"
+this.contrast <- "plate vs pellet"
 
 to_plot <- median_melted_results[condition == this.contrast]
 
@@ -33,7 +33,7 @@ plot_object <-
 		median_melted_results[type != "control", min(-log10(FDR))], median_melted_results[type != "control", max(-log10(FDR))]) +
 	theme_bw(
 		base_size = 12) +
-	ggtitle(this_condition) +
+	ggtitle(this.contrast) +
 	theme(
 		plot.title = element_text(size = 16),
 		axis.text = element_text(size = 14, color = "black"),
@@ -64,7 +64,7 @@ plot_object <-
 		median_melted_results[type != "control", min(-log10(FDR))], median_melted_results[type != "control", max(-log10(FDR))]) +
 	theme_bw(
 		base_size = 12) +
-		ggtitle(this_condition) +
+		ggtitle(this.contrast) +
 			theme(
 		plot.title = element_text(size = 16),
 		axis.text = element_text(size = 14, color = "black"),
