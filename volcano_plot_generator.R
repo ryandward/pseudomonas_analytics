@@ -4,7 +4,7 @@ purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_na
 #############################################################################
 # prepare data for volcano plots
 
-this.contrast <- "plate vs pellet"
+this.contrast <- "mouse vs plate"
 
 to_plot <- median_melted_results[condition == this.contrast]
 
@@ -117,7 +117,7 @@ plot_object <-
 		linetype = "dashed", 
 		color = "red") +
 	geom_label_repel(
-		data = to_plot[FDR < 0.01],
+		data = to_plot[!is.na(Hits)],
 		aes(label = gene_name_stylized),
 		size = 5,
 		box.padding = unit(0.5, "lines"),
