@@ -482,13 +482,13 @@ grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, s
 
 ################################################################################
 
-melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs pellet"]
+melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
 melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs pellet"]
+melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
 
-median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs pellet"]
+median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
 median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs pellet"]
+median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
 
 
 
