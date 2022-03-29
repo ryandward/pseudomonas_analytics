@@ -19,18 +19,14 @@ p_load(
 	statmod
 )
 
-
 annotated_key <- fread("annotated_key.tsv")
-
 exp_design <- fread("exp_design.tsv")
 exp_design <- exp_design[condition != "Undetermined"]
 
-focused <- fread(
-	"targeted_library.txt",
-	col.names = c(
-		"name"
-	)
-)
+focused <- 
+	fread(
+		"targeted_library.txt",
+		col.names = c("name"))
 
 inoculum_exp_design <- 
 	data.table(
@@ -47,7 +43,12 @@ exp_design <- rbind(exp_design, inoculum_exp_design, exp_design2)
 
 exp_design[, verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
 
-exp_design <- exp_design[!condition %in% c("dJMP2", "dJMP4")]
+exp_design <- exp_design[!condition %in% c("dJMP1", "dJMP3", "dJMP5")]
+
+# exp_design <- exp_design[
+# 	verbose %like% "LB_plated_6_generations" |
+# 	verbose %like% "inoculum_pellet_t0" |
+# 	verbose %like% "mouse_plated_10x_inoculum_dilution"]
 
 setorder(exp_design, condition)
 
@@ -86,7 +87,6 @@ all_counts <- rbind(all_counts, inoculum_counts)
 
 all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
 
-
 all_counts <- rbind(all_counts, all_counts2)
 
 setorder(all_counts, condition)
@@ -114,12 +114,6 @@ data_grid_remelted <-
 		variable.name = "condition",
 		value.name = "count",
 		id.vars = c('spacer'))
-
-# print(
-# 	data_grid_remelted[, .(
-# 		median_count = median(count)),
-# 		by = .(condition)][exp_design, 
-# 											 on = .(condition)])
 
 ################################################################################
 
@@ -175,9 +169,8 @@ to_plot <- pheatmap(
 	show_rownames = TRUE,
 	show_colnames = TRUE,
 	clustering_method = "ward.D2",
-	# clustering_distance_rows = "maximum",
-	# clustering_distance_cols = "maximum"
-)
+	clustering_distance_rows = "maximum",
+	clustering_distance_cols = "maximum")
 
 print(to_plot)
 
@@ -320,13 +313,25 @@ plotBCV(data_y)
 
 ################################################################################
 
+# contrast_levels <-
+# 	c("LB_plated_6_generations - inoculum_plated_t0",
+# 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
+# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
+# 		"inoculum_plated_t0 - inoculum_pellet_t0",
+# 		"LB_plated_6_generations - inoculum_pellet_t0")
+
 contrast_levels <-
 	c("LB_plated_6_generations - inoculum_pellet_t0",
-		# "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-		# "LB_plated_madison_6_generations - LB_plated_madison_t0",
-		# "LB_plated_madison_t0 - inoculum_pellet_t0",
-		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
+		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
+		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations")
+
+# contrast_levels <-
+# 	c("LB_plated_6_generations - inoculum_pellet_t0",
+# 		# "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
+# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
+# 		# "LB_plated_madison_6_generations - LB_plated_madison_t0",
+# 		# "LB_plated_madison_t0 - inoculum_pellet_t0",
+# 		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
 
 data_contrast <- makeContrasts(
 	contrasts = contrast_levels,
@@ -383,6 +388,8 @@ melted_results_LFC <-
 		value.name = "LFC",
 		measure.vars = contrast_levels
 	)
+
+melted_results_LFC[, LFC := round(LFC, 3)]
 
 ################################################################################
 
@@ -488,9 +495,9 @@ melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", cond
 melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
 melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
 
-median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
+# median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
 
 setorder(median_melted_results, locus_tag)
 
