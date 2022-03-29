@@ -47,6 +47,8 @@ exp_design <- rbind(exp_design, inoculum_exp_design, exp_design2)
 
 exp_design[, verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
 
+exp_design <- exp_design[!condition %in% c("dJMP2", "dJMP4")]
+
 setorder(exp_design, condition)
 
 ##########################################################################################
@@ -490,7 +492,7 @@ median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0
 median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
 median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
 
-
+setorder(median_melted_results, locus_tag)
 
 
 
