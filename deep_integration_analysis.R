@@ -495,9 +495,15 @@ melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", cond
 melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
 melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
 
-# median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
+melted_results[, condition := factor(condition)]
+
+median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
+median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
+median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
+
+median_melted_results[, condition := factor(condition)]
+
+################################################################################
 
 setorder(median_melted_results, locus_tag)
 

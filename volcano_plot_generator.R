@@ -1,20 +1,24 @@
 source("deep_integration_analysis.R")
+
 purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
 
 #############################################################################
 # prepare data for volcano plots
 
-this.contrast <- "mouse vs plate"
+this.contrast <- "LB_plated_6_generations - inoculum_pellet_t0"
 
 to_plot <- median_melted_results[condition == this.contrast]
 
+setorder(to_plot, FDR)
 
 to_plot[FDR < 0.01, Significance := "FDR < 0.01"]
 to_plot[FDR < 0.001, Significance := "FDR < 0.001"]
 to_plot[FDR < 0.0001, Significance := "FDR < 0.0001"]
 
 to_plot[gene_name %in% purine_enrichment[, gene_name], Pathway := "Purine Biosynthesis"]
+
 to_plot[!gene_name %in% purine_enrichment[, gene_name], index := .I]
+
 to_plot[index <= 10, `Hits` := "Top ten (Non-purine)"]
 
 ################################################################################
