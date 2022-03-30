@@ -515,5 +515,6 @@ setorder(median_melted_results, locus_tag)
 
 
 results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
+median_results_summary <- median_melted_results[FDR < 0.05, .N, by = .(condition)]
 
 
