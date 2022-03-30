@@ -300,22 +300,29 @@ plotBCV(data_y)
 # 		"inoculum_plated_t0 - inoculum_pellet_t0",
 # 		"LB_plated_6_generations - inoculum_pellet_t0")
 
-contrast_levels <-
-	c("LB_plated_6_generations - inoculum_plated_t0",
-		"LB_plated_6_generations - inoculum_pellet_t0",
-		
-		"inoculum_plated_t0 - inoculum_pellet_t0",
-		
-		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
-		"mouse_pellet_10x_inoculum_dilution - inoculum_plated_t0",
-		"mouse_pellet_10x_inoculum_dilution - inoculum_pellet_t0",
-		
-		"mouse_plated_10x_inoculum_dilution - mouse_pellet_10x_inoculum_dilution",
-		
-		
-		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-		"mouse_pellet_10x_inoculum_dilution - LB_plated_6_generations")
+# contrast_levels <-
+# 	c("LB_plated_6_generations - inoculum_plated_t0",
+# 		"LB_plated_6_generations - inoculum_pellet_t0",
+# 		
+# 		"inoculum_plated_t0 - inoculum_pellet_t0",
+# 		
+# 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
+# 		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
+# 		"mouse_pellet_10x_inoculum_dilution - inoculum_plated_t0",
+# 		"mouse_pellet_10x_inoculum_dilution - inoculum_pellet_t0",
+# 		
+# 		"mouse_plated_10x_inoculum_dilution - mouse_pellet_10x_inoculum_dilution",
+# 		
+# 		
+# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
+# 		"mouse_pellet_10x_inoculum_dilution - LB_plated_6_generations")
+
+contrast_levels <- CJ(
+	level2 = colnames(data_permut), 
+	level1 = colnames(data_permut))[
+		level2 != level1, 
+		paste(level2, level1, sep = " - ")]
+
 
 # contrast_levels <-
 # 	c("LB_plated_6_generations - inoculum_pellet_t0",
@@ -507,6 +514,6 @@ grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, s
 setorder(median_melted_results, locus_tag)
 
 
-
+results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
 
 

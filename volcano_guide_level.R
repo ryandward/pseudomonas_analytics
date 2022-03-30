@@ -5,7 +5,7 @@ purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_na
 #############################################################################
 # prepare data for volcano plots
 
-this.contrast <- "plate vs inoc"
+this.contrast <- "mouse vs plate0"
 
 to_plot <- melted_results[condition == this.contrast]
 

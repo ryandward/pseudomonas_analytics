@@ -45,6 +45,8 @@ exp_design[, verbose := paste(media, gDNA_source, growth_condition, rep, sep = "
 
 exp_design <- exp_design[!condition %in% c("dJMP1", "dJMP3", "dJMP5")]
 
+exp_design[gDNA_source == "plated"]
+
 # exp_design <- exp_design[
 # 	verbose %like% "LB_plated_6_generations" |
 # 	verbose %like% "inoculum_pellet_t0" |
@@ -321,8 +323,8 @@ plotBCV(data_y)
 # 		"LB_plated_6_generations - inoculum_pellet_t0")
 
 contrast_levels <-
-	c("LB_plated_6_generations - inoculum_pellet_t0",
-		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
+	c("LB_plated_6_generations - inoculum_plated_t0",
+		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations")
 
 # contrast_levels <-
@@ -491,15 +493,15 @@ grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, s
 
 ################################################################################
 
-melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
+melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
+melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
+melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
 
 melted_results[, condition := factor(condition)]
 
-median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
+median_melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
+median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
+median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
 
 median_melted_results[, condition := factor(condition)]
 
