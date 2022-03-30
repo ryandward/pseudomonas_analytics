@@ -40,7 +40,7 @@ exp_design <-
 		, .N, by = verbose_level][
 			N > 1, verbose_level]]
 
-exp_design <- exp_design[!condition %in% c("dJMP1", "dJMP3", "dJMP5")]
+exp_design <- exp_design[!condition %in% c("dJMP3", "dJMP5")]
 
 # exp_design <- exp_design[
 # 	verbose %like% "LB_plated_6_generations" |
@@ -301,10 +301,21 @@ plotBCV(data_y)
 # 		"LB_plated_6_generations - inoculum_pellet_t0")
 
 contrast_levels <-
-	c("LB_plated_6_generations - inoculum_pellet_t0",
+	c("LB_plated_6_generations - inoculum_plated_t0",
+		"LB_plated_6_generations - inoculum_pellet_t0",
+		
+		"inoculum_plated_t0 - inoculum_pellet_t0",
+		
+		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
 		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
+		"mouse_pellet_10x_inoculum_dilution - inoculum_plated_t0",
+		"mouse_pellet_10x_inoculum_dilution - inoculum_pellet_t0",
+		
+		"mouse_plated_10x_inoculum_dilution - mouse_pellet_10x_inoculum_dilution",
+		
+		
 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-		"LB_plated_6_generations - inoculum_plated_t0")
+		"mouse_pellet_10x_inoculum_dilution - LB_plated_6_generations")
 
 # contrast_levels <-
 # 	c("LB_plated_6_generations - inoculum_pellet_t0",
@@ -471,19 +482,25 @@ grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, s
 
 
 ################################################################################
-
-melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse vs inoc"]
-melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6g vs plate0g"]
-
-melted_results[, condition := factor(condition)]
-
-median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "plate vs inoc"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate"]
-median_melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6g vs plate0g"]
-
-median_melted_results[, condition := factor(condition)]
+# 
+# melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "LB_plate vs inoc"]
+# melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "LB_plate vs inoc"]
+# melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse_plate vs LB_plate"]
+# melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_plate vs inoc"]
+# melted_results[condition == "mouse_plated_10x_inoculum_dilution - mouse_pellet_10x_inoculum_dilution", condition := "mouse_plate vs mouse_pellet"]
+# melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_pellet vs inoc_pellet"]
+# 
+# 
+# melted_results[, condition := factor(condition)]
+# 
+# median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "LB_plate vs inoc"]
+# median_melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "LB_plate vs inoc"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse_plate vs LB_plate"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_plate vs inoc"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - mouse_pellet_10x_inoculum_dilution", condition := "mouse_plate vs mouse_pellet"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_pellet vs inoc_pellet"]
+# 
+# median_melted_results[, condition := factor(condition)]
 
 ################################################################################
 
