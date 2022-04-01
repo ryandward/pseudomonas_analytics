@@ -322,18 +322,18 @@ plotBCV(data_y)
 # 		"inoculum_plated_t0 - inoculum_pellet_t0",
 # 		"LB_plated_6_generations - inoculum_pellet_t0")
 
-contrast_levels <-
-	c("LB_plated_6_generations - inoculum_plated_t0",
-		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations")
-
 # contrast_levels <-
-# 	c("LB_plated_6_generations - inoculum_pellet_t0",
-# 		# "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-# 		# "LB_plated_madison_6_generations - LB_plated_madison_t0",
-# 		# "LB_plated_madison_t0 - inoculum_pellet_t0",
-# 		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
+# 	c("LB_plated_6_generations - inoculum_plated_t0",
+# 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
+# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations")
+
+contrast_levels <-
+	c("LB_plated_6_generations - inoculum_pellet_t0",
+		# "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
+		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
+		# "LB_plated_madison_6_generations - LB_plated_madison_t0",
+		# "LB_plated_madison_t0 - inoculum_pellet_t0",
+		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
 
 data_contrast <- makeContrasts(
 	contrasts = contrast_levels,
@@ -493,17 +493,17 @@ grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, s
 
 ################################################################################
 
-melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
-melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
-
-melted_results[, condition := factor(condition)]
-
-median_melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
-median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
-
-median_melted_results[, condition := factor(condition)]
+# melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
+# melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
+# melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
+# 
+# melted_results[, condition := factor(condition)]
+# 
+# median_melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
+# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
+# 
+# median_melted_results[, condition := factor(condition)]
 
 ################################################################################
 
