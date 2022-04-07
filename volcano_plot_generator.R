@@ -19,7 +19,7 @@ for (this.contrast in unique(median_melted_results$condition)) {
 	
 	to_plot[!gene_name %in% purine_enrichment[, gene_name], index := .I]
 	
-	to_plot[index <= 10, `Hits` := "Top ten (Non-purine)"]
+	to_plot[index <= 30, `Hits` := "Top ten (Non-purine)"]
 	
 	################################################################################
 	# First plot. Colors for FALSE DISCOVERY RATE GRADIENTS
@@ -121,7 +121,7 @@ for (this.contrast in unique(median_melted_results$condition)) {
 			linetype = "dashed",
 			color = "red") +
 		geom_label_repel(
-			data = to_plot[!is.na(Hits) | (medLFC > 0 & FDR < 0.05) ],
+			data = to_plot[gene_name %like% "isp"],
 			aes(label = gene_name_stylized),
 			size = 5,
 			box.padding = unit(0.5, "lines"),

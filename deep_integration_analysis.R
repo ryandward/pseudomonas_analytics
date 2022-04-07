@@ -315,24 +315,9 @@ plotBCV(data_y)
 
 ################################################################################
 
-# contrast_levels <-
-# 	c("LB_plated_6_generations - inoculum_plated_t0",
-# 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-# 		"inoculum_plated_t0 - inoculum_pellet_t0",
-# 		"LB_plated_6_generations - inoculum_pellet_t0")
-
-# contrast_levels <-
-# 	c("LB_plated_6_generations - inoculum_plated_t0",
-# 		"mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
-# 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations")
-
 contrast_levels <-
 	c("LB_plated_6_generations - inoculum_pellet_t0",
-		# "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-		# "LB_plated_madison_6_generations - LB_plated_madison_t0",
-		# "LB_plated_madison_t0 - inoculum_pellet_t0",
 		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
 
 data_contrast <- makeContrasts(

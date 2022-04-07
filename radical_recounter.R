@@ -521,12 +521,9 @@ plotBCV(data_y)
 
 
 contrast_levels <-
-	c("LB_plated_6_generations - inoculum_pellet_t0",
-		# "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0",
+	c("mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
 		"mouse_plated_10x_inoculum_dilution - LB_plated_6_generations",
-		# "LB_plated_madison_6_generations - LB_plated_madison_t0",
-		# "LB_plated_madison_t0 - inoculum_pellet_t0",
-		"mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0")
+		"LB_plated_6_generations - inoculum_pellet_t0")
 
 
 data_contrast <- makeContrasts(
@@ -629,7 +626,7 @@ setorder(median_melted_results, FDR)
 # add fancy names to median melted results
 
 median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
-# median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 
 ################################################################################
