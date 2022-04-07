@@ -43,14 +43,9 @@ exp_design <- rbind(exp_design, inoculum_exp_design, exp_design2)
 
 exp_design[, verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
 
-exp_design <- exp_design[!condition %in% c("dJMP1", "dJMP3", "dJMP5")]
+exp_design <- exp_design[!condition %in% c("dJMP3", "dJMP5")]
 
 exp_design[gDNA_source == "plated"]
-
-# exp_design <- exp_design[
-# 	verbose %like% "LB_plated_6_generations" |
-# 	verbose %like% "inoculum_pellet_t0" |
-# 	verbose %like% "mouse_plated_10x_inoculum_dilution"]
 
 setorder(exp_design, condition)
 
@@ -444,7 +439,7 @@ CPM_melted <- melt(
 grouped_CPM <- copy(CPM_melted)
 
 grouped_CPM[
-	condition %in% c("Inoculum", "Mouse_P1_003"),  
+	condition %in% c("P1_PA14", "Mouse_P1_003"),  
 	Condition := 'Pelleted inoculum t_0']
 
 grouped_CPM[
@@ -460,7 +455,7 @@ grouped_CPM[
 	Condition := 'Pelleted ex-vivo 10× dilution']
 
 grouped_CPM[
-	condition %in% c("dJMP2", "dJMP3", "Mouse_P1_006"),  
+	condition %in% c("dJMP1", "dJMP2", "dJMP3", "Mouse_P1_006"),  
 	Condition := 'Inoculum grown on plates']
 
 grouped_CPM[
@@ -476,25 +471,10 @@ grouped_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, 
 grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
 
 
-################################################################################
-
-# melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
-# melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
-# melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
-# 
-# melted_results[, condition := factor(condition)]
-# 
-# median_melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "plate6 vs plate0"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse vs plate6"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_plated_t0", condition := "mouse vs plate0"]
-# 
-# median_melted_results[, condition := factor(condition)]
-
-################################################################################
-
 setorder(median_melted_results, locus_tag)
 
 
-
+results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
+median_results_summary <- median_melted_results[FDR < 0.05, .N, by = .(condition)]
 
 

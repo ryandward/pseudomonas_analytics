@@ -37,7 +37,7 @@ for (this.contrast in unique(median_melted_results$condition)) {
 			linetype = "dashed",
 			color = "red") +
 		geom_label_repel(
-			data = to_plot[gene_name %like% "isp" | (medLFC > 0 & FDR < 0.05)],
+			data = to_plot[gene_name %like% "isp" | gene_name %like% "orf" | (medLFC > 0 & FDR < 0.05)],
 			aes(label = gene_name_stylized),
 			size = 5,
 			box.padding = unit(0.5, "lines"),

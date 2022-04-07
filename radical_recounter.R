@@ -305,220 +305,41 @@ results_prelim <- topTags(results_prelim, n = Inf)
 results_prelim <- data.table(results_prelim$table)
 results_prelim <- annotated_key[results_prelim, on = .(name == genes)]
 
-ineffective_guides <- results_prelim[type == "knockdown" & FDR > 0.05, .(type, name)]
-
-
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-
-data_grid <- data_grid[!spacer %in% ineffective_guides$name]
-
-
-data_grid_remelted <-
-	melt(
-		data_grid,
-		variable.name = "condition",
-		value.name = "count",
-		id.vars = c('spacer'))
 
 ################################################################################
 
-data_grid_matrix <- data.matrix(data_grid[, -c("spacer")])
+ineffective_guides <- results_prelim[type == "knockdown" & FDR > 0.25]
 
-row.names(data_grid_matrix) <- data_grid$spacer
+CPM_melted <- melt(
+	data.table(
+		data_CPM, 
+		keep.rownames = "spacer"), 
+	id.vars = "spacer", 
+	variable.name = "condition", 
+	value.name = "CPM")
 
-crossjoin_correlation_grid <- cor(data_grid_matrix)
-
-
-# Create a square matrix from the list of pairwise condition correlations.
-################################################################################
-
-plot_matrix <- crossjoin_correlation_grid
-
-break_halves <- length(unique(as.vector(plot_matrix)))
-
-breaks <- c(
-	seq(min(plot_matrix),
-			median(plot_matrix),
-			length.out = break_halves)[-break_halves],
-	seq(median(plot_matrix),
-			max(plot_matrix),
-			length.out = break_halves))
-
-breaks <- breaks[-length(breaks)]
-
-breaks <- c(breaks, 0.99999999)
-
-plot_colors <-
-	c(colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves],
-		colorRampPalette(c("white", "#007ac1"))(break_halves)[-c(1, break_halves)])
-
-plot_colors <-
-	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
-
-plot_colors <- c(plot_colors, "dark grey")
-
-to_plot_title <- paste("Raw Count Condition Correlations")
-
-to_plot <- pheatmap(
-	plot_matrix,
+pheatmap(cor(
+	data.matrix(
+		dcast(
+			exp_design[, .(condition, verbose)][
+				CPM_melted[!spacer %in% ineffective_guides$name], 
+				on = .(condition)], 
+			spacer ~ verbose, value.var = "CPM"))[, -1]), 
 	col = plot_colors,
-	breaks = breaks,
-	border_color = NA,
-	cellwidth = 20,
-	cellheight = 20,
-	main = to_plot_title,
-	angle_col = 315,
-	# fontsize_col = 10,
-	# fontsize_row = 10,
-	# cluster_cols = FALSE,
-	show_rownames = TRUE,
-	show_colnames = TRUE,
-	clustering_method = "ward.D2",
-	clustering_distance_rows = "maximum",
-	clustering_distance_cols = "maximum")
+	main = "CPM correlation after ineffective guides removed")
 
-print(to_plot)
-
-################################################################################
-
-data_group <-
-	factor(
-		exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")],
-		levels = unique(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]))
-
-data_permut <- model.matrix(~ 0 + data_group)
-
-colnames(data_permut) <- levels(data_group)
-
-rownames(data_permut) <- colnames(data_grid_matrix)
-
-data_permut_check <-
-	melt(
-		data.table(
-			data_permut, 
-			keep.rownames = "condition"), 
-		id.vars = "condition")[value == 1][, .(condition, variable)]
-
-data_permut_check <-
-	data_permut_check[exp_design, on = .(condition == condition)]
-
-print(data_permut_check)
-
-data_y <- DGEList(
-	counts = data_grid_matrix,
-	group = data_group,
-	genes = row.names(data_grid_matrix)
-)
-
-data_keep <- filterByExpr(data_grid_matrix, data_group, large.n = 1000)
-
-data_y <- data_y[data_keep, , keep.lib.sizes = FALSE]
-
-data_y <- calcNormFactors(data_y)
-
-data_y <- estimateDisp(data_y, data_permut)
-
-data_fit <- glmQLFit(data_y, data_permut, robust = TRUE)
-
-data_CPM <- cpm(data_y, prior.count = 0)
-
-################################################################################
-# CPM Heatmap
-
-plot_grid <- cor(data_CPM)
-
-plot_matrix <- data.matrix(plot_grid)
-
-break_halves <- length(unique(as.vector(plot_matrix)))
-
-breaks <- c(
-	seq(min(plot_matrix),
-			median(plot_matrix),
-			length.out = break_halves)[-break_halves],
-	seq(median(plot_matrix),
-			max(plot_matrix),
-			length.out = break_halves)
-)
-
-breaks <- breaks[-length(breaks)]
-breaks <- c(breaks, 0.99999999)
-
-plot_colors <-
-	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
-
-plot_colors <- c(plot_colors, "dark grey")
-
-to_plot_title <-
-	paste("Clustering of Conditional Correlations (CPM)")
-
-to_plot <- pheatmap(
-	plot_matrix,
+pheatmap(cor(
+	data.matrix(
+		dcast(
+			exp_design[, .(condition, verbose)][
+				CPM_melted[spacer %in% ineffective_guides$name], 
+				on = .(condition)], 
+			spacer ~ verbose, value.var = "CPM"))[, -1]), 
 	col = plot_colors,
-	breaks = breaks,
-	border_color = NA,
-	cellwidth = 20,
-	cellheight = 20,
-	main = to_plot_title,
-	angle_col = 315,
-	# fontsize_col = 10,
-	# fontsize_row = 10,
-	# cluster_cols = FALSE,
-	show_rownames = TRUE,
-	show_colnames = TRUE,
-	clustering_method = "ward.D2",
-	clustering_distance_rows = "maximum",
-	clustering_distance_cols = "maximum"
-)
+	main = "CPM correlation of only ineffective guides")
 
-print(to_plot)
 
 ################################################################################
-# label with what the sequencing experiment actually is
-
-to_plot <- pheatmap(
-	plot_matrix,
-	col = plot_colors,
-	breaks = breaks,
-	border_color = NA,
-	cellwidth = 20,
-	cellheight = 20,
-	main = to_plot_title,
-	angle_col = 315,
-	# fontsize_col = 10,
-	# fontsize_row = 10,
-	# cluster_cols = FALSE,
-	show_rownames = TRUE,
-	show_colnames = TRUE,
-	clustering_method = "ward.D2",
-	labels_row = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
-	labels_col = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
-	clustering_distance_rows = "maximum",
-	clustering_distance_cols = "maximum"
-)
-
-print(to_plot)
-
-################################################################################
-
-data_CPM_by_group <- 
-	copy(data_CPM)
-
-colnames(data_CPM_by_group) <- 
-	factor(exp_design[,  paste(
-		media, gDNA_source, growth_condition, sep = "_")])
-
-print(to_plot)
-
-################################################################################
-# other diagnostic plots
-
-plotMDS(log2(data_CPM_by_group))
-plotQLDisp(data_fit)
-plotBCV(data_y)
-
 
 contrast_levels <-
 	c("mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0",
@@ -593,7 +414,7 @@ melted_results <-
 		melted_results_FDR,
 		on = .(genes, condition)]
 
-melted_results <- melted_results[!is.na(FDR)]
+melted_results <- melted_results[!is.na(FDR) & !genes %in% ineffective_guides$name]
 
 melted_results[
 	, LFC := melted_results[
@@ -668,7 +489,7 @@ grouped_CPM[
 	Condition := 'Pelleted ex-vivo 10× dilution']
 
 grouped_CPM[
-	condition %in% c("dJMP2", "dJMP3", "Mouse_P1_006"),  
+	condition %in% c("dJMP1", "dJMP2", "dJMP3", "Mouse_P1_006"),  
 	Condition := 'Inoculum grown on plates']
 
 grouped_CPM[
@@ -684,33 +505,13 @@ grouped_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, 
 grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
 
 
-################################################################################
-# 
-# melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "LB_plate vs inoc"]
-# melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "LB_plate vs inoc"]
-# melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse_plate vs LB_plate"]
-# melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_plate vs inoc"]
-# melted_results[condition == "mouse_plated_10x_inoculum_dilution - mouse_pellet_10x_inoculum_dilution", condition := "mouse_plate vs mouse_pellet"]
-# melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_pellet vs inoc_pellet"]
-# 
-# 
-# melted_results[, condition := factor(condition)]
-# 
-# median_melted_results[condition == "LB_plated_6_generations - inoculum_pellet_t0", condition := "LB_plate vs inoc"]
-# median_melted_results[condition == "LB_plated_6_generations - inoculum_plated_t0", condition := "LB_plate vs inoc"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations", condition := "mouse_plate vs LB_plate"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_plate vs inoc"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - mouse_pellet_10x_inoculum_dilution", condition := "mouse_plate vs mouse_pellet"]
-# median_melted_results[condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0", condition := "mouse_pellet vs inoc_pellet"]
-# 
-# median_melted_results[, condition := factor(condition)]
 
-################################################################################
 
 setorder(median_melted_results, locus_tag)
 
 
 results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
 median_results_summary <- median_melted_results[FDR < 0.05, .N, by = .(condition)]
+
 
 
