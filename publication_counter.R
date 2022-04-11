@@ -382,15 +382,18 @@ melted_results <-
 
 melted_results <- melted_results[!is.na(FDR)]
 
-melted_results[
-	, LFC := melted_results[
-		i  = genes %like% "Ctrl",
-		j  = .(ctrl_medLFC = median(LFC, na.rm = TRUE)),
-		by = .(condition)][
-			i  = .SD,
-			on = .(condition),
-			j  = .(adj_medLFC = LFC - ctrl_medLFC),
-			by = .EACHI]$adj_medLFC]
+melted_results_by_condition <- 
+	melted_results[
+		genes %like% "Ctrl",
+		.(med_LFC = median(LFC)),
+		keyby = .(condition)]
+
+setkey(melted_results, condition)
+
+
+melted_results[, LFC := melted_results_by_condition[
+	melted_results, LFC - med_LFC, by = .EACHI]$V1]
+
 
 ################################################################################
 
