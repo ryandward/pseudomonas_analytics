@@ -390,7 +390,6 @@ melted_results_by_condition <-
 
 setkey(melted_results, condition)
 
-
 melted_results[, LFC := melted_results_by_condition[
 	melted_results, LFC - med_LFC, by = .EACHI]$V1]
 
