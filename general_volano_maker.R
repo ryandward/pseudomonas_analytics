@@ -1,4 +1,4 @@
-source("integration_analysis.R")
+# source("integration_analysis.R")
 
 purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
 

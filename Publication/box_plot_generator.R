@@ -1,11 +1,17 @@
-source("presentation_analysis.R")
+source("Publication/publication_counter.R")
 
 
 ##################################################################################
 # TAKE A SUB-SELECTION OF THE GROUPED CPM DATA THAT WE ARE INTERSETED IN EXAMINING
 targeted_CPM <- grouped_CPM[
-	condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017", "Inoculum", "Mouse_P1_003")]  
-
+	condition %in% c(
+		"Mouse_P1_015", 
+		"Mouse_P1_016", 
+		"Mouse_P1_017", 
+		"Inoculum", 
+		"Mouse_P1_003",
+		"Mouse_P1_004",
+		"dJMP4")]  
 
 plot_CPM <- function(this_gene) {
 	to_plot <-
@@ -25,11 +31,9 @@ plot_CPM <- function(this_gene) {
 			hjust = 1
 		))
 	
-	ggthemr("flat")
 	print(this_plot)
 	rm(this_gene)
-	ggthemr_reset()
-	
+
 }
 
 # save as 1000 x 750
@@ -50,7 +54,7 @@ box_CPM <- function(this_gene) {
 		scale_fill_brewer(palette = "Accent") +
 		ylab("Log2 Counts per Million") +
 		xlab("Condition") +
-		ggtitle(paste("Guides recovered in pellet and mouse for", this_gene)) +
+		ggtitle(paste("Guides recovered for", this_gene)) +
 		theme(
 			plot.title = element_text(hjust = 0.5, size = 20),
 			axis.text = element_text(size = 14, color = "black"),
@@ -60,11 +64,9 @@ box_CPM <- function(this_gene) {
 			legend.position = "bottom"
 		)
 	
-	ggthemr("flat")
 	print(this_plot)
 	# rm(this_gene)
-	ggthemr_reset()
-	
+
 }
 
 box_CPM_controls <- function() {
@@ -85,11 +87,9 @@ box_CPM_controls <- function() {
 		ggtitle(paste("Eight Random Control Guides"))
 
 	
-	ggthemr("flat")
 	print(this_plot)
 	# rm(this_gene)
-	ggthemr_reset()
-	
+
 }
 
 
@@ -113,9 +113,7 @@ bar_CPM_controls <- function() {
 			hjust = 1
 		))
 	
-	ggthemr("flat")
 	print(this_plot)
-	ggthemr_reset()
 }
 
 # save as 1000 x 750

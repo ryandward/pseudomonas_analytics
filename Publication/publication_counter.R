@@ -443,12 +443,13 @@ CPM_melted <- melt(
 grouped_CPM <- copy(CPM_melted)
 
 grouped_CPM[
-	condition %in% c("P1_PA14", "Mouse_P1_003"),  
-	Condition := 'Pelleted inoculum t_0']
+	condition %in% c("Inoculum", "Mouse_P1_003"),  
+	Condition := 'Inoculum (t0)']
 
 grouped_CPM[
 	condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017"),  
-	Condition := 'Plated ex-vivo 10× dilution']
+	Condition := 'Lung']
+# plated 10x dilution 
 
 grouped_CPM[
 	condition %in% c("Mouse_P1_018", "Mouse_P1_019", "Mouse_P1_020", "Mouse_P1_021", "Mouse_P1_022"),  
@@ -464,7 +465,7 @@ grouped_CPM[
 
 grouped_CPM[
 	condition %in% c("dJMP4", "dJMP5", "Mouse_P1_004"),  
-	Condition := 'Inoculum plated after 6 generations growth in-vitro']
+	Condition := 'Inoculum (6 gen in-vitro)']
 
 grouped_CPM <- exp_design[grouped_CPM, on = .(condition)]
 
