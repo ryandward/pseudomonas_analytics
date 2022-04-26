@@ -1,4 +1,4 @@
-source("deep_integration_analysis.R")
+source("Publication/publication_counter.R")
 
 library(pacman)
 

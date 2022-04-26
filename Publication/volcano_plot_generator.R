@@ -1,6 +1,23 @@
 # source("deep_integration_analysis.R")
 
+library(pacman)
+
+p_load(
+	data.table,
+	scales,
+	edgeR,
+	pheatmap,
+	svglite,
+	ggplot2,
+	ggrepel,
+	colourpicker,
+	RColorBrewer,
+	poolr,
+	statmod
+)
+
 purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
+
 
 #############################################################################
 # prepare data for volcano plots
@@ -11,6 +28,7 @@ for (this.contrast in unique(median_melted_results$condition)) {
 	
 	setorder(to_plot, FDR)
 	
+	# to_plot[FDR >= 0.01, Significance := "Insignificant"]
 	to_plot[FDR < 0.01, Significance := "FDR < 0.01"]
 	to_plot[FDR < 0.001, Significance := "FDR < 0.001"]
 	to_plot[FDR < 0.0001, Significance := "FDR < 0.0001"]
@@ -19,7 +37,7 @@ for (this.contrast in unique(median_melted_results$condition)) {
 	
 	to_plot[!gene_name %in% purine_enrichment[, gene_name], index := .I]
 	
-	to_plot[index <= 30, `Hits` := "Top ten (Non-purine)"]
+	# to_plot[index <= 30, `Hits` := "Top ten (Non-purine)"]
 	
 	################################################################################
 	# First plot. Colors for FALSE DISCOVERY RATE GRADIENTS
@@ -100,7 +118,7 @@ for (this.contrast in unique(median_melted_results$condition)) {
 			data = to_plot,
 			aes(x = medLFC, y = -log10(FDR))) +
 		geom_point(
-			aes(color = `Hits`),
+			aes(color = `Significance`),
 			size = 2) +
 		xlim(
 			median_melted_results[type != "control", min(medLFC)], median_melted_results[type != "control", max(medLFC)]) +

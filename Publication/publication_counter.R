@@ -5,7 +5,6 @@
 require('pacman')
 
 p_load(
-	ggthemr,
 	data.table,
 	scales,
 	edgeR,
@@ -19,13 +18,15 @@ p_load(
 	statmod
 )
 
-annotated_key <- fread("annotated_key.tsv")
-exp_design <- fread("exp_design.tsv")
+annotated_key <- fread("Publication/annotated_key.tsv")
+
+exp_design <- fread("Publication/exp_design.tsv")
+
 exp_design <- exp_design[condition != "Undetermined"]
 
 focused <- 
 	fread(
-		"targeted_library.txt",
+		"Publication/targeted_library.txt",
 		col.names = c("name"))
 
 inoculum_exp_design <- 
@@ -37,7 +38,7 @@ inoculum_exp_design <-
 		rep = 2,
 		generations = 0)
 
-exp_design2 <- fread("deep_exp_design2.tsv")
+exp_design2 <- fread("Publication/deep_exp_design2.tsv")
 
 exp_design <- rbind(exp_design, inoculum_exp_design, exp_design2)
 
@@ -53,7 +54,7 @@ setorder(exp_design, condition)
 
 all_counts <- 
 	fread(
-		"all_counts_seal.tsv", 
+		"Publication/all_counts_seal.tsv.gz", 
 		header = FALSE, 
 		col.names = c(
 			"promoter", 
@@ -63,7 +64,7 @@ all_counts <-
 
 inoculum_counts <- 
 	fread(
-		"inoculum_counts.tsv", 
+		"Publication/inoculum_counts.tsv.gz", 
 		header = FALSE, 
 		col.names = c(
 			"promoter", 
@@ -71,7 +72,7 @@ inoculum_counts <-
 			"count"))
 
 all_counts2 <- fread(
-	"all_counts_seal2.tsv",
+	"Publication/all_counts_seal2.tsv.gz",
 	header = FALSE,
 	col.names = c(
 		"count",
@@ -415,7 +416,8 @@ setorder(median_melted_results, FDR)
 # add fancy names to median melted results
 
 median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
-# median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene_name == "", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
 
 ################################################################################
@@ -472,9 +474,7 @@ grouped_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, 
 
 grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
 
-
 setorder(median_melted_results, locus_tag)
-
 
 results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
 median_results_summary <- median_melted_results[FDR < 0.05, .N, by = .(condition)]
