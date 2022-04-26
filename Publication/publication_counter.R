@@ -79,13 +79,19 @@ all_counts2 <- fread(
 		"condition",
 		"spacer"))
 
+# For all the results we have from the sequencing run performed at UWM, 
+# the data are presumed to be P1.
+
+all_counts2 <- all_counts2 %>%
+	mutate(promoter = "P1")
+
 inoculum_counts[, condition := "Inoculum"]
 
 all_counts <- rbind(all_counts, inoculum_counts)
 
-all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
-
 all_counts <- rbind(all_counts, all_counts2)
+
+all_counts <- all_counts[promoter == "P1"][, .(spacer, condition, count)]
 
 setorder(all_counts, condition)
 
@@ -124,53 +130,53 @@ crossjoin_correlation_grid <- cor(data_grid_matrix)
 # Create a square matrix from the list of pairwise condition correlations.
 
 ################################################################################
+# 
+# plot_matrix <- crossjoin_correlation_grid
+# 
+# break_halves <- length(unique(as.vector(plot_matrix)))
+# 
+# breaks <- c(
+# 	seq(min(plot_matrix),
+# 			median(plot_matrix),
+# 			length.out = break_halves)[-break_halves],
+# 	seq(median(plot_matrix),
+# 			max(plot_matrix),
+# 			length.out = break_halves))
+# 
+# breaks <- breaks[-length(breaks)]
+# 
+# breaks <- c(breaks, 0.99999999)
+# 
+# plot_colors <-
+# 	c(colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves],
+# 		colorRampPalette(c("white", "#007ac1"))(break_halves)[-c(1, break_halves)])
+# 
+# plot_colors <-
+# 	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
+# 
+# plot_colors <- c(plot_colors, "dark grey")
+# 
+# to_plot_title <- paste("Raw Count Condition Correlations")
+# 
+# to_plot <- pheatmap(
+# 	plot_matrix,
+# 	col = plot_colors,
+# 	breaks = breaks,
+# 	border_color = NA,
+# 	cellwidth = 20,
+# 	cellheight = 20,
+# 	main = to_plot_title,
+# 	angle_col = 315,
+# 	# fontsize_col = 10,
+# 	# fontsize_row = 10,
+# 	# cluster_cols = FALSE,
+# 	show_rownames = TRUE,
+# 	show_colnames = TRUE,
+# 	clustering_method = "ward.D2",
+# 	clustering_distance_rows = "maximum",
+# 	clustering_distance_cols = "maximum")
 
-plot_matrix <- crossjoin_correlation_grid
-
-break_halves <- length(unique(as.vector(plot_matrix)))
-
-breaks <- c(
-	seq(min(plot_matrix),
-			median(plot_matrix),
-			length.out = break_halves)[-break_halves],
-	seq(median(plot_matrix),
-			max(plot_matrix),
-			length.out = break_halves))
-
-breaks <- breaks[-length(breaks)]
-
-breaks <- c(breaks, 0.99999999)
-
-plot_colors <-
-	c(colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves],
-		colorRampPalette(c("white", "#007ac1"))(break_halves)[-c(1, break_halves)])
-
-plot_colors <-
-	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
-
-plot_colors <- c(plot_colors, "dark grey")
-
-to_plot_title <- paste("Raw Count Condition Correlations")
-
-to_plot <- pheatmap(
-	plot_matrix,
-	col = plot_colors,
-	breaks = breaks,
-	border_color = NA,
-	cellwidth = 20,
-	cellheight = 20,
-	main = to_plot_title,
-	angle_col = 315,
-	# fontsize_col = 10,
-	# fontsize_row = 10,
-	# cluster_cols = FALSE,
-	show_rownames = TRUE,
-	show_colnames = TRUE,
-	clustering_method = "ward.D2",
-	clustering_distance_rows = "maximum",
-	clustering_distance_cols = "maximum")
-
-print(to_plot)
+# print(to_plot)
 
 ################################################################################
 
@@ -217,97 +223,95 @@ data_CPM <- cpm(data_y, prior.count = 0)
 
 ################################################################################
 # CPM Heatmap
-
-plot_grid <- cor(data_CPM)
-
-plot_matrix <- data.matrix(plot_grid)
-
-break_halves <- length(unique(as.vector(plot_matrix)))
-
-breaks <- c(
-	seq(min(plot_matrix),
-			median(plot_matrix),
-			length.out = break_halves)[-break_halves],
-	seq(median(plot_matrix),
-			max(plot_matrix),
-			length.out = break_halves)
-)
-
-breaks <- breaks[-length(breaks)]
-breaks <- c(breaks, 0.99999999)
-
-plot_colors <-
-	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
-
-plot_colors <- c(plot_colors, "dark grey")
-
-to_plot_title <-
-	paste("Clustering of Conditional Correlations (CPM)")
-
-to_plot <- pheatmap(
-	plot_matrix,
-	col = plot_colors,
-	breaks = breaks,
-	border_color = NA,
-	cellwidth = 20,
-	cellheight = 20,
-	main = to_plot_title,
-	angle_col = 315,
-	# fontsize_col = 10,
-	# fontsize_row = 10,
-	# cluster_cols = FALSE,
-	show_rownames = TRUE,
-	show_colnames = TRUE,
-	clustering_method = "ward.D2",
-	clustering_distance_rows = "maximum",
-	clustering_distance_cols = "maximum"
-)
-
-print(to_plot)
+# 
+# plot_grid <- cor(data_CPM)
+# 
+# plot_matrix <- data.matrix(plot_grid)
+# 
+# break_halves <- length(unique(as.vector(plot_matrix)))
+# 
+# breaks <- c(
+# 	seq(min(plot_matrix),
+# 			median(plot_matrix),
+# 			length.out = break_halves)[-break_halves],
+# 	seq(median(plot_matrix),
+# 			max(plot_matrix),
+# 			length.out = break_halves)
+# )
+# 
+# breaks <- breaks[-length(breaks)]
+# breaks <- c(breaks, 0.99999999)
+# 
+# plot_colors <-
+# 	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
+# 
+# plot_colors <- c(plot_colors, "dark grey")
+# 
+# to_plot_title <-
+# 	paste("Clustering of Conditional Correlations (CPM)")
+# 
+# to_plot <- pheatmap(
+# 	plot_matrix,
+# 	col = plot_colors,
+# 	breaks = breaks,
+# 	border_color = NA,
+# 	cellwidth = 20,
+# 	cellheight = 20,
+# 	main = to_plot_title,
+# 	angle_col = 315,
+# 	# fontsize_col = 10,
+# 	# fontsize_row = 10,
+# 	# cluster_cols = FALSE,
+# 	show_rownames = TRUE,
+# 	show_colnames = TRUE,
+# 	clustering_method = "ward.D2",
+# 	clustering_distance_rows = "maximum",
+# 	clustering_distance_cols = "maximum"
+# )
+# print(to_plot)
 
 ################################################################################
 # label with what the sequencing experiment actually is
-
-to_plot <- pheatmap(
-	plot_matrix,
-	col = plot_colors,
-	breaks = breaks,
-	border_color = NA,
-	cellwidth = 20,
-	cellheight = 20,
-	main = to_plot_title,
-	angle_col = 315,
-	# fontsize_col = 10,
-	# fontsize_row = 10,
-	# cluster_cols = FALSE,
-	show_rownames = TRUE,
-	show_colnames = TRUE,
-	clustering_method = "ward.D2",
-	labels_row = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
-	labels_col = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
-	clustering_distance_rows = "maximum",
-	clustering_distance_cols = "maximum"
-)
-
-print(to_plot)
+# 
+# to_plot <- pheatmap(
+# 	plot_matrix,
+# 	col = plot_colors,
+# 	breaks = breaks,
+# 	border_color = NA,
+# 	cellwidth = 20,
+# 	cellheight = 20,
+# 	main = to_plot_title,
+# 	angle_col = 315,
+# 	# fontsize_col = 10,
+# 	# fontsize_row = 10,
+# 	# cluster_cols = FALSE,
+# 	show_rownames = TRUE,
+# 	show_colnames = TRUE,
+# 	clustering_method = "ward.D2",
+# 	labels_row = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
+# 	labels_col = factor(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]),
+# 	clustering_distance_rows = "maximum",
+# 	clustering_distance_cols = "maximum"
+# )
+# print(to_plot)
 
 ################################################################################
 
-data_CPM_by_group <- 
-	copy(data_CPM)
-
-colnames(data_CPM_by_group) <- 
-	factor(exp_design[,  paste(
-		media, gDNA_source, growth_condition, sep = "_")])
-
-print(to_plot)
+# data_CPM_by_group <- 
+# 	copy(data_CPM)
+# 
+# colnames(data_CPM_by_group) <- 
+# 	factor(exp_design[,  paste(
+# 		media, gDNA_source, growth_condition, sep = "_")])
+#
+# print(to_plot)
 
 ################################################################################
 # other diagnostic plots
 
-plotMDS(log2(data_CPM_by_group))
-plotQLDisp(data_fit)
-plotBCV(data_y)
+# plotMDS(log2(data_CPM_by_group))
+# plotQLDisp(data_fit)
+# plotBCV(data_y)
 
 ################################################################################
 
