@@ -18,11 +18,11 @@ annotated_key <- fread("annotated_key.tsv")
 
 Determine if the data is good quality by checking for promoter contamination between samples.
 
-First, read files
-```{r}
+```{r, fig.width=10, fig.height=5}
 
 additional <- fread(
 	"../additional_sequences/additional.tsv.gz",
+	header = FALSE, 
 	col.names = c(
 		"count",
 		"condition",
@@ -43,10 +43,7 @@ forensics.1 <- additional %>%
 
 forensics.1.plot <- forensics.1 %>% 
 	select(-cloned_strain) %>% 
-	data.matrix %>%
-	t %>%
-	cpm %>%
-	t %>%
+	data.matrix %>% t %>% cpm %>% t %>%
 	as_tibble %>%
 	bind_cols(forensics.1 %>% select(cloned_strain)) %>%
 	pivot_longer(!cloned_strain, names_to = "promoter", values_to = "CPM") %>%
@@ -68,28 +65,28 @@ Instead of "P1_PA14" use the inoculum from the mouse experiment.
 
 additional <- fread(
 	"../additional_sequences/additional.tsv.gz",
+	header = FALSE, 
 	col.names = c(
 		"count",
 		"condition",
 		"promoter",
 		"spacer"))
 
-counts.batch1 <- 
-	fread(
-		"all_counts_seal.tsv.gz", 
-		header = FALSE, 
-		col.names = c(
-			"promoter", 
-			"spacer", 
-			"count", 
-			"condition"))
+counts.batch1 <- fread(
+	"all_counts_seal.tsv.gz",
+	header = FALSE,
+	col.names = c(
+		"promoter",
+		"spacer",
+		"count",
+		"condition"))
 
 ```
 Remove P1_PA14 counts, replace with Mouse_P1_001 counts, and rename to be more
 descriptive: PA_PA14 (round 1). Then separate into two columns
 "claimed_promoter" and "strain", which are separated by "_".
 
-```{r}
+```{r, fig.width=10, fig.height=5}
 
 additional <- additional %>% 
 	filter(condition != "P1_PA14") %>%
@@ -144,7 +141,7 @@ additional <- additional %>% filter(promoter == claimed_promoter)
 
 Determine how depleted the strains became just after mating them into PA14.
 
-```{r}
+```{r, fig.width=10, fig.height=5}
 additional <- additional %>% 
 	group_by(spacer, promoter, strain) %>% 
 	summarise(count = sum(count)) %>% 
