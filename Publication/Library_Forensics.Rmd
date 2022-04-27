@@ -1,0 +1,213 @@
+---
+title: "Library Composition Forensics"
+keep_md: no
+author: "Ryan Ward"
+output: html_document
+---
+
+Load libraries and constants...
+
+```{r}
+library(pacman)
+
+p_load(data.table, viridis, tidyverse, edgeR, scales)
+p_load_current_gh("hrbrmstr/hrbrthemes")
+annotated_key <- fread("annotated_key.tsv")
+
+```
+
+Determine if the data is good quality by checking for promoter contamination between samples.
+
+First, read files
+```{r}
+
+additional <- fread(
+	"../additional_sequences/additional.tsv.gz",
+	col.names = c(
+		"count",
+		"condition",
+		"promoter",
+		"spacer"))
+
+additional <- additional %>%
+	separate(
+		condition, 
+		into = c("claimed_promoter", "strain"), 
+		sep = "_")
+
+forensics.1 <- additional %>% 
+	group_by(claimed_promoter, promoter, strain) %>% 
+	summarise(count = sum(count)) %>%
+	pivot_wider(id_cols = c( "strain", "claimed_promoter"), names_from = promoter, values_from = count) %>%
+	unite("cloned_strain", claimed_promoter, strain) 
+
+forensics.1.plot <- forensics.1 %>% 
+	select(-cloned_strain) %>% 
+	data.matrix %>%
+	t %>%
+	cpm %>%
+	t %>%
+	as_tibble %>%
+	bind_cols(forensics.1 %>% select(cloned_strain)) %>%
+	pivot_longer(!cloned_strain, names_to = "promoter", values_to = "CPM") %>%
+	ggplot(aes(fill = promoter, x = cloned_strain, y = CPM)) +
+	geom_bar(position = "dodge", stat = "identity") +
+	theme_ipsum() + 
+	scale_fill_viridis(discrete = TRUE, option = "cividis") + 
+	ggtitle("Promoters (P1, P2, and P3) found in each strain (CPM)") +
+	scale_y_continuous(labels = label_number_si())
+
+print(forensics.1.plot)
+```
+
+There is significant contamination of P3 in the sample which contains the P1 library mated into PA14.
+
+Instead of "P1_PA14" use the inoculum from the mouse experiment.
+
+```{r}
+
+additional <- fread(
+	"../additional_sequences/additional.tsv.gz",
+	col.names = c(
+		"count",
+		"condition",
+		"promoter",
+		"spacer"))
+
+counts.batch1 <- 
+	fread(
+		"all_counts_seal.tsv.gz", 
+		header = FALSE, 
+		col.names = c(
+			"promoter", 
+			"spacer", 
+			"count", 
+			"condition"))
+
+```
+Remove P1_PA14 counts, replace with Mouse_P1_001 counts, and rename to be more
+descriptive: PA_PA14 (round 1). Then separate into two columns
+"claimed_promoter" and "strain", which are separated by "_".
+
+```{r}
+
+additional <- additional %>% 
+	filter(condition != "P1_PA14") %>%
+	bind_rows(counts.batch1 %>% filter(condition == "Mouse_P1_001")) %>%
+	mutate(
+		condition = replace(
+			condition, 
+			condition == "Mouse_P1_001", 
+			"P1_PA14 (round 1)")) %>%
+	separate(
+		condition, 
+		into = c("claimed_promoter", "strain"), 
+		sep = "_")
+
+# Perform forensics to see the composition of the strain-promoter combos
+
+forensics.2 <- additional %>% 
+	group_by(claimed_promoter, promoter, strain) %>% 
+	summarise(count = sum(count)) %>%
+	pivot_wider(id_cols = c( "strain", "claimed_promoter"), names_from = promoter, values_from = count) %>%
+	unite("cloned_strain", claimed_promoter, strain) 
+
+# Counts per million by each (promoter, claimed_promoter+strain) combo, then 
+# magrittr into ggplot and bar plot.
+
+forensics.2.plot <- forensics.2 %>% 
+	select(-cloned_strain) %>% 
+	data.matrix %>%
+	t %>%
+	cpm %>%
+	t %>%
+	as_tibble %>%
+	bind_cols(forensics.2 %>% select(cloned_strain)) %>%
+	pivot_longer(!cloned_strain, names_to = "promoter", values_to = "CPM") %>%
+	ggplot(aes(fill = promoter, x = cloned_strain, y = CPM)) +
+	geom_bar(position = "dodge", stat = "identity") +
+	theme_ipsum() + 
+	scale_fill_viridis(discrete = TRUE, option = "cividis") + 
+	ggtitle("Promoters (P1, P2, and P3) found in each strain (CPM)") +
+	scale_y_continuous(labels = label_number_si())
+
+print(forensics.2.plot)
+```
+
+Now that we know the vast majority of each promoter encountered is in fact
+the claimed promoter, we can simply remove all instances where the promoter
+obtained from sequencing does not match the claimed promoter.
+
+```{r}
+additional <- additional %>% filter(promoter == claimed_promoter)
+```
+
+Determine how depleted the strains became just after mating them into PA14.
+
+```{r}
+additional <- additional %>% 
+	group_by(spacer, promoter, strain) %>% 
+	summarise(count = sum(count)) %>% 
+	pivot_wider(
+		id_cols = "spacer", 
+		names_from = c("promoter", "strain"), 
+		values_from = "count", 
+		values_fill = 0) %>%
+	pivot_longer(
+		!spacer, 
+		names_to = c("cloned_strain"), 
+		values_to = "count") %>%
+	mutate(count = count + 1)
+
+additional.cpm <- additional %>% 
+	pivot_wider(
+		id_cols = "spacer", 
+		names_from = c("cloned_strain"), 
+		values_from = "count") %>%
+	ungroup %>%
+	select(-spacer) %>% 
+	data.matrix %>%
+	cpm %>%
+	as_tibble %>%
+	bind_cols(
+		additional %>% pivot_wider(
+			id_cols = "spacer",
+			names_from = c("cloned_strain"),
+			values_from = "count") %>%
+			select(spacer)) %>% 
+	inner_join(
+		annotated_key %>% 
+			select(name, type), 
+		by = c("spacer" = "name")) %>% 
+	pivot_longer(
+		!c(spacer, type), 
+		names_to = "cloned_strain", 
+		values_to = "CPM") %>% 
+	mutate(`Cloned Strain` = factor(cloned_strain)) %>% 
+	mutate(`Type` = factor(type)) %>% 
+	group_by(`Cloned Strain`) %>% 
+	nest
+
+cpm.max <- additional.cpm %>% unnest(data) %>% ungroup %>% select(CPM) %>% max
+
+additional.cpm <- additional.cpm %>%
+	mutate(
+		plot = map2(
+			data,
+			`Cloned Strain`,
+			~ggplot(
+				data = .x,
+				aes(x = CPM, fill = Type)) +
+				geom_density() +
+				theme_ipsum() +
+				scale_fill_viridis(discrete = TRUE, alpha = 0.5, option = "cividis", direction = -1) +
+				scale_x_continuous(
+					trans = scales::pseudo_log_trans(base = 10),
+					breaks = c(0, 10^(1:6)),
+					labels = label_number_si(),
+					limits = c(0, cpm.max)) +
+				theme(legend.position = "bottom") +
+				ggtitle(paste("Strain:", .y))))
+
+print(additional.cpm$plot)
+```
