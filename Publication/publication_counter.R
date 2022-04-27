@@ -6,6 +6,7 @@ require('pacman')
 
 p_load(
 	data.table,
+	tidyverse,
 	scales,
 	edgeR,
 	pheatmap,
