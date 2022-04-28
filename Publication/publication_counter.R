@@ -485,4 +485,38 @@ setorder(median_melted_results, locus_tag)
 results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
 median_results_summary <- median_melted_results[FDR < 0.05, .N, by = .(condition)]
 
+##########################################################################################
+# function to create boxplots from CPM
+
+
+box_CPM <- function(this_gene) {
+	print(
+		grouped_CPM %>% filter(
+			condition %in% c(
+				"Mouse_P1_015", 
+				"Mouse_P1_016", 
+				"Mouse_P1_017", 
+				"Inoculum", 
+				"Mouse_P1_003",
+				"Mouse_P1_004",
+				"dJMP4"))  %>%
+			filter(gene_name == this_gene | locus_tag == this_gene) %>%
+			mutate(Guide = factor(
+				as.character(offset),
+				levels = as.character(sort(unique(offset))))) %>%
+			ggplot(aes(x = Condition, y = CPM, fill = Guide, color = Guide)) +
+			geom_boxplot(outlier.colour = NA, alpha = 0.5) +
+			geom_point(position = position_jitterdodge()) +
+			ylab("Log2 Counts per Million") +
+			xlab("Condition") +
+			theme_ipsum() +
+			scale_fill_ipsum() +
+			scale_color_ipsum() +
+			scale_y_continuous(
+				trans = scales::pseudo_log_trans(base = 10),
+				breaks = c(0, 10^(1:5)),
+				labels = label_number_si(),
+				limits = c(0, cpm.max)) +
+			ggtitle(bquote(bold(Guides ~ Recovered ~ `for` ~ bolditalic(.(this_gene)) ~ "(CPM)"))))
+	}
 

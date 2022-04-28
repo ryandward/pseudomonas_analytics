@@ -1,5 +1,6 @@
 source("Publication/publication_counter.R")
 
+p_
 
 ##################################################################################
 # TAKE A SUB-SELECTION OF THE GROUPED CPM DATA THAT WE ARE INTERSETED IN EXAMINING
@@ -15,11 +16,15 @@ targeted_CPM <- grouped_CPM[
 
 plot_CPM <- function(this_gene) {
 	to_plot <-
-		targeted_CPM[gene_name == this_gene |
-								 	locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose, offset)]
+		targeted_CPM[
+			gene_name == this_gene |
+				locus_tag == this_gene, 
+			.(name, gene_name, locus_tag, condition, CPM, verbose, offset)]
 	
-	to_plot$offset <- factor(as.character(to_plot$offset),
-													 levels = as.character(sort(unique(to_plot$offset))))
+	to_plot$offset <- 
+		factor(
+			as.character(to_plot$offset),
+			levels = as.character(sort(unique(to_plot$offset))))
 	
 	this_plot <-
 		ggplot(data = to_plot, aes(x = verbose, y = CPM, fill = offset)) +
@@ -28,8 +33,9 @@ plot_CPM <- function(this_gene) {
 		theme(axis.text.x = element_text(
 			angle = 55,
 			vjust = 1.0,
-			hjust = 1
-		))
+			hjust = 1)) +
+	theme_ipsum() +
+		scale_fill_viridis(discrete = TRUE, alpha = 0.5, option = "cividis", direction = -1)
 	
 	print(this_plot)
 	rm(this_gene)
@@ -51,7 +57,6 @@ box_CPM <- function(this_gene) {
 	this_plot <-
 		ggplot(data = to_plot, aes(x = Condition, y = log2(CPM), fill = offset)) +
 		geom_boxplot() + 
-		scale_fill_brewer(palette = "Accent") +
 		ylab("Log2 Counts per Million") +
 		xlab("Condition") +
 		ggtitle(paste("Guides recovered for", this_gene)) +
@@ -62,10 +67,12 @@ box_CPM <- function(this_gene) {
 			legend.text = element_text(size = 8, color = "black"),
 			legend.title = element_text(size = 14, color = "black"),
 			legend.position = "bottom"
-		)
+		) +
+		theme_ipsum() +
+		scale_fill_viridis(discrete = TRUE, alpha = 0.8)
 	
 	print(this_plot)
-	# rm(this_gene)
+	rm(this_gene)
 
 }
 
