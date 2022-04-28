@@ -507,7 +507,7 @@ box_CPM <- function(this_gene) {
 			ggplot(aes(x = Condition, y = CPM, fill = Guide, color = Guide)) +
 			geom_boxplot(outlier.colour = NA, alpha = 0.5) +
 			geom_point(position = position_jitterdodge()) +
-			ylab("Log2 Counts per Million") +
+			ylab("Counts per Million") +
 			xlab("Condition") +
 			theme_ipsum() +
 			scale_fill_ipsum() +
