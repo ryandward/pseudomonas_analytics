@@ -105,5 +105,4 @@ this_plot <- ggplot(
 	# ylim(c(0, 160000)) +
 	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1))
 
-ggthemr("flat")
 print(this_plot)
