@@ -48,7 +48,7 @@ forensics.1.plot <- forensics.1 %>%
 	bind_cols(forensics.1 %>% select(cloned_strain)) %>%
 	pivot_longer(!cloned_strain, names_to = "promoter", values_to = "CPM") %>%
 	ggplot(aes(fill = promoter, x = cloned_strain, y = CPM)) +
-	geom_bar(position = "dodge", stat = "identity") +
+	geom_bar(position = "dodge", stat = "identity", color = "black") +
 	theme_ipsum() + 
 	scale_fill_viridis(discrete = TRUE, option = "cividis") + 
 	ggtitle("Promoters (P1, P2, and P3) found in each strain (CPM)") +
@@ -122,7 +122,7 @@ forensics.2.plot <- forensics.2 %>%
 	bind_cols(forensics.2 %>% select(cloned_strain)) %>%
 	pivot_longer(!cloned_strain, names_to = "promoter", values_to = "CPM") %>%
 	ggplot(aes(fill = promoter, x = cloned_strain, y = CPM)) +
-	geom_bar(position = "dodge", stat = "identity") +
+	geom_bar(position = "dodge", stat = "identity", color = "black") +
 	theme_ipsum() + 
 	scale_fill_viridis(discrete = TRUE, option = "cividis") + 
 	ggtitle("Promoters (P1, P2, and P3) found in each strain (CPM)") +
