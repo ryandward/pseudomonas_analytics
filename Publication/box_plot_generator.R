@@ -14,50 +14,24 @@ targeted_CPM <- grouped_CPM[
 		"Mouse_P1_004",
 		"dJMP4")]  
 
-plot_CPM <- function(this_gene) {
-	to_plot <-
-		targeted_CPM[
-			gene_name == this_gene |
-				locus_tag == this_gene, 
-			.(name, gene_name, locus_tag, condition, CPM, verbose, offset)]
-	
-	to_plot$offset <- 
-		factor(
-			as.character(to_plot$offset),
-			levels = as.character(sort(unique(to_plot$offset))))
-	
-	this_plot <-
-		ggplot(data = to_plot, aes(x = verbose, y = CPM, fill = offset)) +
-		geom_bar(stat = "identity", position = position_dodge()) +
-		ggtitle(paste("CPM for guides:", this_gene)) +
-		theme(axis.text.x = element_text(
-			angle = 55,
-			vjust = 1.0,
-			hjust = 1)) +
-	theme_ipsum() +
-		scale_fill_viridis(discrete = TRUE, alpha = 0.5, option = "cividis", direction = -1)
-	
-	print(this_plot)
-	rm(this_gene)
-
-}
-
 # save as 1000 x 750
 
 box_CPM <- function(this_gene) {
 	
 	to_plot <-
-		targeted_CPM[gene_name == this_gene |
-								 	locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose, offset, rep, Condition)]
+		targeted_CPM[
+			gene_name == this_gene |
+				locus_tag == this_gene, .(name, gene_name, locus_tag, condition, CPM, verbose, offset, rep, Condition)]
 	
-	to_plot[, group := gsub("_[0-9]+$", "", verbose) ]
+	to_plot[
+		, group := gsub("_[0-9]+$", "", verbose) ]
 	
 	to_plot$offset <- factor(as.character(to_plot$offset),
 													 levels = as.character(sort(unique(to_plot$offset))))
 	this_plot <-
-		ggplot(data = to_plot, aes(x = Condition, y = log2(CPM), fill = offset)) +
+		ggplot(data = to_plot, aes(x = Condition, y = CPM, fill = offset)) +
 		geom_boxplot() + 
-		ylab("Log2 Counts per Million") +
+		ylab("Counts per Million") +
 		xlab("Condition") +
 		ggtitle(paste("Guides recovered for", this_gene)) +
 		theme(
@@ -69,7 +43,12 @@ box_CPM <- function(this_gene) {
 			legend.position = "bottom"
 		) +
 		theme_ipsum() +
-		scale_fill_viridis(discrete = TRUE, alpha = 0.8)
+		scale_fill_viridis(discrete = TRUE, alpha = 0.8) +
+		scale_y_continuous(
+			trans = scales::pseudo_log_trans(base = 10),
+			breaks = c(0, 10^(1:6)),
+			labels = label_number_si(),
+			limits = c(0, max(to_plot$CPM)))
 	
 	print(this_plot)
 	rm(this_gene)

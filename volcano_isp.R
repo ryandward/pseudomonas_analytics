@@ -42,7 +42,7 @@ for (this.contrast in unique(median_melted_results$condition)) {
 			size = 5,
 			box.padding = unit(0.5, "lines"),
 			point.padding = unit(0.5, "lines"),
-			max.iter = 500,
+			max.iter = 50000,
 			max.overlaps = 100,
 			parse = TRUE)
 	

@@ -50,7 +50,7 @@ for (i in botneck_summary[generations > 0, condition]) {
 
 	botneck_calcs <- Nb_data[condition == base_t0, .(spacer, fio = count/sum(count))]
 	botneck_calcs <- botneck_calcs[Nb_data[condition == i, .(spacer, fis = count/sum(count))], on = .(spacer)]
-	botneck_calcs[, ratio := ((fis - fio)^2) / (fio * (1 - fio))]
+	botneck_calcs[, ratio := ((fis - fio)^2) / (fio * (1 - fio)^2)]
 	botneck_calcs <- botneck_calcs[!is.na(ratio) & ratio != Inf]
 
 	f_hat <- botneck_calcs[ratio != Inf & !(is.na(ratio)), sum(ratio) ] * ( 1 / length(Nb_data[, unique(spacer)]))
@@ -65,7 +65,7 @@ for (i in botneck_summary[generations > 0, condition]) {
 
 	botneck_calcs <- Nb_data[condition == base_t0 & spacer %like% "Ctrl", .(spacer, fio = count/sum(count))]
 	botneck_calcs <- botneck_calcs[Nb_data[condition == i & spacer %like% "Ctrl", .(spacer, fis = count/sum(count))], on = .(spacer)]
-	botneck_calcs[, ratio := ((fis - fio)^2) / (fio * (1 - fio))]
+	botneck_calcs[, ratio := ((fis - fio)^2) / (fio * (1 - fio)^2)]
 	botneck_calcs <- botneck_calcs[!is.na(ratio) & ratio != Inf]
 
 	f_hat <- botneck_calcs[ratio != Inf & !(is.na(ratio)), sum(ratio) ] * ( 1 / length(Nb_data[spacer %like% "Ctrl", unique(spacer)]))
@@ -80,7 +80,7 @@ for (i in botneck_summary[generations > 0, condition]) {
 
 	botneck_calcs <- Nb_data[condition == base_t0 & !(spacer %like% "Ctrl"), .(spacer, fio = count/sum(count))]
 	botneck_calcs <- botneck_calcs[Nb_data[condition == i & !(spacer %like% "Ctrl"), .(spacer, fis = count/sum(count))], on = .(spacer)]
-	botneck_calcs[, ratio := ((fis - fio)^2) / (fio * (1 - fio))]
+	botneck_calcs[, ratio := ((fis - fio)^2) / (fio * (1 - fio)^2)]
 	botneck_calcs <- botneck_calcs[!is.na(ratio) & ratio != Inf]
 
 	f_hat <- botneck_calcs[ratio != Inf & !(is.na(ratio)), sum(ratio) ] * ( 1 / length(Nb_data[!(spacer %like% "Ctrl"), unique(spacer)]))
@@ -105,5 +105,4 @@ this_plot <- ggplot(
 	# ylim(c(0, 160000)) +
 	theme(axis.text.x = element_text(angle = 55, vjust = 1.0, hjust = 1))
 
-ggthemr("flat")
 print(this_plot)
