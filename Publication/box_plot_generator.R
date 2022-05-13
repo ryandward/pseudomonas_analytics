@@ -26,8 +26,10 @@ box_CPM <- function(this_gene) {
 	to_plot[
 		, group := gsub("_[0-9]+$", "", verbose) ]
 	
-	to_plot$offset <- factor(as.character(to_plot$offset),
-													 levels = as.character(sort(unique(to_plot$offset))))
+	to_plot$offset <- factor(
+		as.character(to_plot$offset),
+		levels = as.character(sort(unique(to_plot$offset))))
+	
 	this_plot <-
 		ggplot(data = to_plot, aes(x = Condition, y = CPM, fill = offset)) +
 		geom_boxplot() + 
