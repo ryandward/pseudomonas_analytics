@@ -1,14 +1,13 @@
 source("Publication/publication_counter.R")
 
-library(pacman)
+library(pacman, ComplexHeatmap)
 
 this.confidence <- 0.9
 
 p_load(
 	pracma, 
 	data.table,
-	ggplot2,
-	ggthemr)
+	ggplot2)
 
 ########################################################################################
 ######################################################################################
@@ -117,11 +116,10 @@ for (i in grouped_densities_summary[, unique(Condition)]) {
 				bquote(Log[2] ~ counts ~ per ~ million. ~ bold(.(i)) ~ italic(.(j)) ~ guides. ~ .(this.rep.count) ~ reps. )) +
 			xlab(
 				bquote(Log[2] ~ counts ~ per ~ million)) +
-			ylab("Density")
+			ylab("Density") +
+			theme_ipsum()
 		
-		ggthemr("flat")
 		print(plot_object)
-		ggthemr_reset()
-		
+
 	}
 }

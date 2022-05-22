@@ -90,11 +90,11 @@ descriptive: PA_PA14 (round 1). Then separate into two columns
 
 additional <- additional %>% 
 	filter(condition != "P1_PA14") %>%
-	bind_rows(counts.batch1 %>% filter(condition == "Mouse_P1_001")) %>%
+	bind_rows(counts.batch1 %>% filter(condition == "Mouse_P1_003")) %>%
 	mutate(
 		condition = replace(
 			condition, 
-			condition == "Mouse_P1_001", 
+			condition == "Mouse_P1_003", 
 			"P1_PA14 (round 1)")) %>%
 	separate(
 		condition, 

@@ -1,4 +1,4 @@
-source("publication_counter.R")
+# source("publication_counter.R")
 
 mixed <- median_melted_results %>% mutate(
 	depleted = (medLFC < -1 & FDR < 0.05), 
@@ -13,7 +13,7 @@ select(locus_tag, condition, depleted, resistant) %>%
 	pivot_wider(id_cols = c(locus_tag), names_from = condition, values_from = value)
 
 mixed.matrix <- mixed %>%
-	make_comb_mat(mode = "intersect")
+	make_comb_mat(mode = "distinct")
 
 p <- UpSet(
 	mixed.matrix, 
