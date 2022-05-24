@@ -3,8 +3,9 @@ source("Publication/publication_counter.R")
 median_melted_results %>% 
 	mutate(
 	Response = case_when(
-		medLFC <= -1 & FDR < 0.001 ~ "Depletion",
-		medLFC >= 1 & FDR < 0.001 ~ "Enrichment",
+		medLFC < -4 & FDR < 0.05 ~ "LFC < -4",
+		medLFC < -2 & FDR < 0.05 ~ "LFC < -2",
+		medLFC < -1 & FDR < 0.05 ~ "LFC < -1",
 		TRUE ~ "No Response")) %>%
 	mutate(condition = case_when(
 		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "Lung (v. Inoculum)",
@@ -13,7 +14,7 @@ median_melted_results %>%
 	select(locus_tag, condition, Response) %>% 
 	pivot_longer(!c(condition, locus_tag)) %>% 
 	pivot_wider(id_cols = c(locus_tag), names_from = condition, values_from = value) %>%
-	make_long(`Lung (v. Inoculum)`, `Lung (v. Plate)`, `Plate (v. Inoculum)`) %>% 
+	make_long( `Plate (v. Inoculum)`, `Lung (v. Plate)`, `Lung (v. Inoculum)`) %>% 
 	ggplot(aes(
 		x = x, 
 		next_x = next_x,
