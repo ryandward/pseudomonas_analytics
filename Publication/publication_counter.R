@@ -520,3 +520,36 @@ box_CPM <- function(this_gene) {
 			ggtitle(bquote(bold(Guides ~ Recovered ~ `for` ~ bolditalic(.(this_gene)) ~ "(CPM)"))))
 	}
 
+################################################################################
+
+median_melted_results %>% 
+	mutate(
+		Response = case_when(
+			medLFC < -1 & FDR < 0.05 ~ "Vulnerable",
+			medLFC > 1 & FDR < 0.05 ~ "Resistant",
+			TRUE ~ "No Response")) %>%
+	select(locus_tag, gene_name, condition, Response) %>% 
+	mutate(condition = case_when(
+		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
+		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
+		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro")) %>% 
+	filter(gene_name %like% "pur") %>% 
+	pivot_wider(id_cols = c(gene_name), names_from = condition, values_from = Response) %>% 
+	arrange(gene_name)
+
+################################################################################
+
+median_melted_results %>% 
+	mutate(
+		Response = case_when(
+			medLFC < -1 & FDR < 0.05 ~ "Vulnerable",
+			medLFC > 1 & FDR < 0.05 ~ "Resistant",
+			TRUE ~ "No Response")) %>%
+	select(locus_tag, gene_name, condition, Response) %>% 
+	mutate(condition = case_when(
+		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
+		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
+		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro")) %>% 
+	filter(gene_name %like% "lpt") %>% 
+	pivot_wider(id_cols = c(gene_name), names_from = condition, values_from = Response) %>% 
+	arrange(gene_name)
