@@ -20,17 +20,17 @@ p_load(
 )
 
 
-annotated_key <- fread("annotated_key.tsv")
+annotated_key <- fread("Publication/annotated_key.tsv")
 
-exp_design <- fread("exp_design.tsv")
+exp_design <- fread("exp_design_recount.tsv")
 exp_design <- exp_design[condition != "Undetermined"]
 
-focused <- fread(
-	"targeted_library.txt",
-	col.names = c(
-		"name"
-	)
-)
+# focused <- fread(
+# 	"targeted_library.txt",
+# 	col.names = c(
+# 		"name"
+# 	)
+# )
 
 inoculum_exp_design <- 
 	data.table(
@@ -41,9 +41,9 @@ inoculum_exp_design <-
 		rep = 2,
 		generations = 0)
 
-exp_design2 <- fread("exp_design2.tsv")
+# exp_design2 <- fread("exp_design2.tsv")
 
-exp_design <- rbind(exp_design, inoculum_exp_design, exp_design2)
+exp_design <- rbind(exp_design, inoculum_exp_design)
 
 exp_design[, verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
 
@@ -53,7 +53,7 @@ setorder(exp_design, condition)
 
 all_counts <- 
 	fread(
-		"all_counts_seal.tsv", 
+		"Publication/all_counts_seal.tsv.gz", 
 		header = FALSE, 
 		col.names = c(
 			"promoter", 
@@ -63,7 +63,7 @@ all_counts <-
 
 inoculum_counts <- 
 	fread(
-		"inoculum_counts.tsv", 
+		"Publication/inoculum_counts.tsv.gz", 
 		header = FALSE, 
 		col.names = c(
 			"promoter", 
@@ -71,7 +71,7 @@ inoculum_counts <-
 			"count"))
 
 all_counts2 <- fread(
-	"all_counts_seal2.tsv",
+	"Publication/all_counts_seal2.tsv.gz",
 	header = FALSE,
 	col.names = c(
 		"count",

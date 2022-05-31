@@ -3,16 +3,18 @@ p_load(ggsankey, tidyverse, viridis)
 median_melted_results %>% 
 	mutate(
 		Response = case_when(
-			medLFC < 0 & FDR < 0.05 ~ "Vulnerable",
+			medLFC < -1 & FDR < 0.05 ~ "Vulnerable",
+			medLFC < 1 & FDR < 0.05 ~ "Resistant",
+			
 			TRUE ~ "No Response")) %>%
 	select(locus_tag, condition, Response) %>% 
 	mutate(condition = case_when(
-		condition == "mouse vs inoc" ~ "In vivo",
-		condition == "mouse vs plate" ~ "In vivo v. in vitro",
-		condition == "plate vs inoc" ~ "In vitro"))	%>%
+		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
+		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
+		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro"))	%>%
 	pivot_longer(!c(condition, locus_tag)) %>% 
 	pivot_wider(id_cols = c(locus_tag), names_from = condition, values_from = value) %>%
-	make_long(`In vivo`, `In vitro`, `In vivo v. in vitro` ) %>% 
+	make_long(`In vitro`, `In vivo`, `In vivo v. in vitro` ) %>% 
 	ggplot(aes(
 		x = x, 
 		next_x = next_x,
@@ -28,8 +30,8 @@ median_melted_results %>%
 	# 	discrete = T, direction = 1, option = "inferno", alpha = 0.55) +
 	scale_fill_manual(values = c(
 		"grey", "#63ccff", "#ff6f60")) +
-		geom_sankey_label(aes(colour = "node"),
-		size = 3.5, color = 1) +
+	geom_sankey_label(aes(colour = "node"),
+										size = 3.5, color = 1) +
 	theme_sankey(base_size = 16) +
 	guides(
 		fill = guide_legend(title = "Relative Response to Knockdown")) +

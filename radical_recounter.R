@@ -19,8 +19,8 @@ p_load(
 	statmod
 )
 
-annotated_key <- fread("annotated_key.tsv")
-exp_design <- fread("exp_design_recount.tsv")
+annotated_key <- fread("Publication/annotated_key.tsv")
+exp_design <- fread("Publication/exp_design_recount.tsv")
 exp_design <- exp_design[condition != "Undetermined"]
 
 focused <- 
