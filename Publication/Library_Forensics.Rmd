@@ -153,8 +153,7 @@ additional <- additional %>%
 	pivot_longer(
 		!spacer, 
 		names_to = c("cloned_strain"), 
-		values_to = "count") %>%
-	mutate(count = count + 1)
+		values_to = "count")
 
 additional.cpm <- additional %>% 
 	pivot_wider(
