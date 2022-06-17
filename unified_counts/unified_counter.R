@@ -108,6 +108,19 @@ all_counts <-
 
 ################################################################################
 
+all_counts %>%
+ggplot(aes(x = CPM)) + 
+	geom_density(aes(), alpha = 0.25) + 	
+	scale_x_continuous(
+		trans = scales::pseudo_log_trans(base = 10),
+		breaks = c(0, 10^(1:6)),
+		labels = label_number_si()) + 
+	facet_wrap(facets = "condition") -> p
+
+print(p)
+
+################################################################################
+
 setorder(all_counts, condition)
 
 setorder(exp_design, condition)
