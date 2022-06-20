@@ -21,3 +21,4 @@ dJMP2	inoculum	plated	t0	2	0
 dJMP3	inoculum	plated	t0	3	0
 dJMP4	LB	plated	6_generations	2	6
 dJMP5	LB	plated	6_generations	3	6
+P1_mfdpir	mating	pellet	none	1	0

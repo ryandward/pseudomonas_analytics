@@ -19,7 +19,39 @@ p_load(
 	statmod
 )
 
+##########################################################################################
+# girl, fix your annotations
+
 annotations <- fread("unified_counts/full_annotations.tsv")
+
+annotations <- annotations %>% 
+	mutate(locus_tag = case_when(
+		gene == "Ctrl" ~ gene, !is.na(gene) & gene != "" & locus_tag != "" & locus_tag != "unknown" ~ locus_tag, 
+		locus_tag == "" ~ gsub("PA14_", "", PAO1_locus_tag), 
+		PA14_locus_tag != "" & locus_tag == "unknown" ~ PA14_locus_tag, 
+		sequence == "CTGTGGGAGCTACGGGCATT" ~ "PA3145"), 
+		gene = case_when(gene == "unnamed" | gene == "" ~ locus_tag, locus_tag == "PA3145" ~ "wbpL", 
+										 TRUE ~ gene))
+
+non_unique_genes <- annotations %>% select(locus_tag, gene) %>% unique %>% select(gene) %>% group_by(gene) %>% summarise(count = 1:n()) %>% filter(count > 1) %>% pull(gene)
+
+annotations <- 
+	annotations %>% 
+	mutate(gene = case_when(
+		gene %in% non_unique_genes ~ paste0(gene, "_" ,locus_tag), 
+		TRUE ~ gene))
+
+non_unique_locus_tags <- annotations %>% select(locus_tag, gene) %>% unique %>% select(locus_tag) %>% group_by(locus_tag) %>% summarise(count = 1:n()) %>% filter(count > 1) %>% pull(locus_tag)
+
+annotations <- 
+	annotations %>% 
+	mutate(gene = case_when(
+		locus_tag == "PA3145" ~ "wbpL",
+		locus_tag == "RS09495" ~ "orfN",
+		TRUE ~ gene))
+
+##########################################################################################
+
 
 exp_design <- fread("unified_counts/exp_design.tsv")
 
@@ -57,7 +89,8 @@ all_counts %>%
 		trans = scales::pseudo_log_trans(base = 10),
 		breaks = c(0, 10^(1:6)),
 		labels = label_number_si()) + 
-	facet_wrap(facets = "condition") -> p
+	facet_wrap(facets = "condition") +
+	ggtitle("Raw Density Counts") -> p
 
 print(p)
 ################################################################################
@@ -70,7 +103,8 @@ all_counts %>% group_by(condition, sequence) %>%
 		trans = scales::pseudo_log_trans(base = 10),
 		breaks = c(0, 10^(1:6)),
 		labels = label_number_si()) + 
-	facet_wrap(facets = "condition") -> p
+	facet_wrap(facets = "condition") +
+	ggtitle("Let's ignore promoters") -> p
 
 print(p)
 ################################################################################
@@ -85,7 +119,8 @@ all_counts %>%
 		trans = scales::pseudo_log_trans(base = 10),
 		breaks = c(0, 10^(1:6)),
 		labels = label_number_si()) + 
-	facet_wrap(facets = "condition") -> p
+	facet_wrap(facets = "condition") +
+	ggtitle("Let's ignore promoters, and extra guides found") -> p
 
 print(p)
 ################################################################################
@@ -121,99 +156,124 @@ print(p)
 
 ################################################################################
 
+all_counts %>% 
+	inner_join(exp_design) %>%
+	ggplot(aes(x = CPM)) + 
+	geom_density(aes(fill = as.character(rep)), alpha = 0.25) + 	
+	scale_x_continuous(
+		trans = scales::pseudo_log_trans(base = 10),
+		breaks = c(0, 10^(1:6)),
+		labels = label_number_si()) + 
+	facet_wrap(facets = "sample_group") -> p
+
+print(p)
+
+################################################################################
+
+# Figure 2
+all_counts %>% 
+	inner_join(exp_design) %>%
+	inner_join(annotations) %>% 
+	mutate(type = case_when(gene %like% "Ctrl" ~ "control", TRUE ~ "knockdown")) %>% 
+	filter(sample_group %like% "mating" | sample_group %like% "^inoculum_pellet") %>%
+	mutate(sample_group = case_when(
+		sample_group %like% "mating" ~ "Mating Strain",
+		sample_group %like% "^inoculum_pellet" ~ "PA14 Library")) %>%
+	arrange(sample_group) %>%
+	mutate(sample_group = factor(sample_group, levels = unique(sample_group))) %>%
+	ggplot(aes(x = CPM)) + 
+	geom_density(aes(fill = as.character(rep)), alpha = 0.25) + 	
+	scale_x_continuous(
+		trans = scales::pseudo_log_trans(base = 10),
+		breaks = c(0, 10^(1:6)),
+		labels = label_number_si()) + 
+	facet_grid(facets = c("type", "sample_group")) -> p
+
+print(p)
+
+
+
+################################################################################
+
 setorder(all_counts, condition)
 
 setorder(exp_design, condition)
 
-all_counts <-
-	all_counts[condition %in% exp_design$condition | condition == "P1_mfdpir"] [, .(sequence, condition, count)]
+all_counts <- all_counts %>% 
+	data.table %>%
+	`[`(condition %in% exp_design$condition)
 
 all_counts <- all_counts %>% inner_join(annotations)
 
 ################################################################################
-# Check for Data Integrity
-################################################################################
 
-data_grid <- 
-	data.table::dcast(
-		all_counts,
-		spacer ~ condition,
-		value.var = "count",
-		fill = 0,
-		fun.aggregate = sum)
+data_grid <- all_counts %>% pivot_wider(id_cols = sequence, names_from = condition, values_from = count)
 
-data_grid_remelted <-
-	melt(
-		data_grid,
-		variable.name = "condition",
-		value.name = "count",
-		id.vars = c('spacer'))
+data_grid_matrix <- data_grid %>% select(-sequence) %>% data.matrix
 
-################################################################################
+row.names(data_grid_matrix) <- data_grid$sequence
 
-data_grid_matrix <- data.matrix(data_grid[, -c("spacer")])
-
-row.names(data_grid_matrix) <- data_grid$spacer
+colnames(data_grid_matrix) <- data_grid %>% colnames %>% data.table(condition = .) %>% inner_join(exp_design) %>% pull(sample_name)
 
 crossjoin_correlation_grid <- cor(data_grid_matrix)
 
 # Create a square matrix from the list of pairwise condition correlations.
 
 ################################################################################
-# 
-# plot_matrix <- crossjoin_correlation_grid
-# 
-# break_halves <- length(unique(as.vector(plot_matrix)))
-# 
-# breaks <- c(
-# 	seq(min(plot_matrix),
-# 			median(plot_matrix),
-# 			length.out = break_halves)[-break_halves],
-# 	seq(median(plot_matrix),
-# 			max(plot_matrix),
-# 			length.out = break_halves))
-# 
-# breaks <- breaks[-length(breaks)]
-# 
-# breaks <- c(breaks, 0.99999999)
-# 
-# plot_colors <-
-# 	c(colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves],
-# 		colorRampPalette(c("white", "#007ac1"))(break_halves)[-c(1, break_halves)])
-# 
-# plot_colors <-
-# 	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
-# 
-# plot_colors <- c(plot_colors, "dark grey")
-# 
-# to_plot_title <- paste("Raw Count Condition Correlations")
-# 
-# to_plot <- pheatmap(
-# 	plot_matrix,
-# 	col = plot_colors,
-# 	breaks = breaks,
-# 	border_color = NA,
-# 	cellwidth = 20,
-# 	cellheight = 20,
-# 	main = to_plot_title,
-# 	angle_col = 315,
-# 	# fontsize_col = 10,
-# 	# fontsize_row = 10,
-# 	# cluster_cols = FALSE,
-# 	show_rownames = TRUE,
-# 	show_colnames = TRUE,
-# 	clustering_method = "ward.D2",
-# 	clustering_distance_rows = "maximum",
-# 	clustering_distance_cols = "maximum")
 
-# print(to_plot)
+plot_matrix <- crossjoin_correlation_grid
+
+break_halves <- length(unique(as.vector(plot_matrix)))
+
+breaks <- c(
+	seq(min(plot_matrix),
+			median(plot_matrix),
+			length.out = break_halves)[-break_halves],
+	seq(median(plot_matrix),
+			max(plot_matrix),
+			length.out = break_halves))
+
+breaks <- breaks[-length(breaks)]
+
+breaks <- c(breaks, 0.99999999)
+
+plot_colors <-
+	c(colorRampPalette(c("#ba000d", "white"))(break_halves)[-break_halves],
+		colorRampPalette(c("white", "#007ac1"))(break_halves)[-c(1, break_halves)])
+
+plot_colors <-
+	colorRampPalette(c("white", "#007ac1"))(break_halves * 2 - 1)[-c(1, break_halves)]
+
+plot_colors <- c(plot_colors, "dark grey")
+
+to_plot_title <- paste("Raw Count Condition Correlations")
+
+to_plot <- pheatmap(
+	plot_matrix,
+	col = plot_colors,
+	breaks = breaks,
+	border_color = NA,
+	cellwidth = 20,
+	cellheight = 20,
+	main = to_plot_title,
+	angle_col = 315,
+	# fontsize_col = 10,
+	# fontsize_row = 10,
+	# cluster_cols = FALSE,
+	show_rownames = TRUE,
+	show_colnames = TRUE,
+	clustering_method = "ward.D2",
+	clustering_distance_rows = "canberra",
+	clustering_distance_cols = "canberra")
+
+print(to_plot)
 
 ################################################################################
 
 data_group <-
 	factor(
-		exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")],
-		levels = unique(exp_design[,  paste(media, gDNA_source, growth_condition, sep = "_")]))
+		exp_design[, sample_group],
+		levels = unique(exp_design$sample_group))
 
 data_permut <- model.matrix(~ 0 + data_group)
 
@@ -356,9 +416,9 @@ data_contrast <- makeContrasts(
 
 ################################################################################
 
-results_FDR <- all_counts[, .(genes = unique(spacer))]
+results_FDR <- all_counts[, .(genes = unique(sequence))]
 
-results_LFC <- all_counts[, .(genes = unique(spacer))]
+results_LFC <- all_counts[, .(genes = unique(sequence))]
 
 ################################################################################
 
@@ -413,13 +473,14 @@ melted_results_LFC[, LFC := round(LFC, 3)]
 melted_results <-
 	melted_results_LFC[
 		melted_results_FDR,
-		on = .(genes, condition)]
+		on = .(genes, condition)] %>% 
+	rename(sequence = genes) %>% inner_join(annotations)
 
 melted_results <- melted_results[!is.na(FDR)]
 
 melted_results_by_condition <- 
 	melted_results[
-		genes %like% "Ctrl",
+		gene %like% "Ctrl",
 		.(med_LFC = median(LFC)),
 		keyby = .(condition)]
 
@@ -431,16 +492,17 @@ melted_results[, LFC := melted_results_by_condition[
 
 ################################################################################
 
-melted_results <-
-	annotated_key[melted_results, on = .(name == genes)]
-
-################################################################################
-
 median_melted_results <-
 	melted_results[, .(
 		medLFC = median(LFC),
 		FDR = stouffer(FDR)$p),
-		by = .(locus_tag, gene_name, type, condition)]
+		by = .(locus_tag, gene, condition)]
+
+median_melted_results <- median_melted_results %>%
+	mutate(type = case_when(
+		gene == "Ctrl" ~ "control",
+		gene != "Ctrl" ~ "knockdown"
+	))
 
 ################################################################################
 
@@ -449,10 +511,10 @@ setorder(median_melted_results, FDR)
 ################################################################################
 # add fancy names to median melted results
 
-median_melted_results[gene_name != ".", gene_name_stylized := paste0("italic('", gene_name, "')")]
-median_melted_results[gene_name == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
-median_melted_results[gene_name == "", gene_name_stylized := paste0("bold('", locus_tag, "')")]
-median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene != ".", gene_stylized := paste0("italic('", gene, "')")]
+median_melted_results[gene == ".", gene_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene == "", gene_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene == "control", gene_stylized := paste0("bold('", locus_tag, "')")]
 
 ################################################################################
 ################################################################################
@@ -466,53 +528,53 @@ median_melted_results[gene_name == "control", gene_name_stylized := paste0("bold
 ################################################################################
 # melt CPM for later use
 
-CPM_melted <- melt(
-	data.table(
-		data_CPM, 
-		keep.rownames = "spacer"), 
-	id.vars = "spacer", 
-	variable.name = "condition", 
-	value.name = "CPM")
-
-grouped_CPM <- copy(CPM_melted)
-
-grouped_CPM[
-	condition %in% c("Inoculum", "Mouse_P1_003"),  
-	Condition := 'Inoculum (t0)']
-
-grouped_CPM[
-	condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017"),  
-	Condition := 'Lung']
-# plated 10x dilution 
-
-grouped_CPM[
-	condition %in% c("Mouse_P1_018", "Mouse_P1_019", "Mouse_P1_020", "Mouse_P1_021", "Mouse_P1_022"),  
-	Condition := 'Plated ex-vivo 100× dilution']
-
-grouped_CPM[
-	condition %in% c("Mouse_P1_007", "Mouse_P1_008"),  
-	Condition := 'Pelleted ex-vivo 10× dilution']
-
-grouped_CPM[
-	condition %in% c("dJMP1", "dJMP2", "dJMP3", "Mouse_P1_006"),  
-	Condition := 'Inoculum grown on plates']
-
-grouped_CPM[
-	condition %in% c("dJMP4", "dJMP5", "Mouse_P1_004"),  
-	Condition := 'Inoculum (6 gen in-vitro)']
-
-grouped_CPM <- exp_design[grouped_CPM, on = .(condition)]
-
-grouped_CPM <- annotated_key[grouped_CPM, on = .(name == spacer)]
-
-grouped_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
-
-grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
-
-setorder(median_melted_results, locus_tag)
-
-results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
-median_results_summary <- median_melted_results[FDR < 0.05, .N, by = .(condition)]
+# CPM_melted <- melt(
+# 	data.table(
+# 		data_CPM, 
+# 		keep.rownames = "spacer"), 
+# 	id.vars = "spacer", 
+# 	variable.name = "condition", 
+# 	value.name = "CPM")
+# 
+# grouped_CPM <- copy(CPM_melted)
+# 
+# grouped_CPM[
+# 	condition %in% c("Inoculum", "Mouse_P1_003"),  
+# 	Condition := 'Inoculum (t0)']
+# 
+# grouped_CPM[
+# 	condition %in% c("Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017"),  
+# 	Condition := 'Lung']
+# # plated 10x dilution 
+# 
+# grouped_CPM[
+# 	condition %in% c("Mouse_P1_018", "Mouse_P1_019", "Mouse_P1_020", "Mouse_P1_021", "Mouse_P1_022"),  
+# 	Condition := 'Plated ex-vivo 100× dilution']
+# 
+# grouped_CPM[
+# 	condition %in% c("Mouse_P1_007", "Mouse_P1_008"),  
+# 	Condition := 'Pelleted ex-vivo 10× dilution']
+# 
+# grouped_CPM[
+# 	condition %in% c("dJMP1", "dJMP2", "dJMP3", "Mouse_P1_006"),  
+# 	Condition := 'Inoculum grown on plates']
+# 
+# grouped_CPM[
+# 	condition %in% c("dJMP4", "dJMP5", "Mouse_P1_004"),  
+# 	Condition := 'Inoculum (6 gen in-vitro)']
+# 
+# grouped_CPM <- exp_design[grouped_CPM, on = .(condition)]
+# 
+# grouped_CPM <- annotated_key[grouped_CPM, on = .(name == spacer)]
+# 
+# grouped_CPM[!is.na(rep), verbose := paste(media, gDNA_source, growth_condition, rep, sep = "_")]
+# 
+# grouped_CPM[is.na(rep), verbose := paste(media, gDNA_source, growth_condition, sep = "_")]
+# 
+# setorder(median_melted_results, locus_tag)
+# 
+# results_summary <- melted_results[FDR < 0.05, .N, by = .(condition)]
+# median_results_summary <- median_melted_results[FDR < 0.05, .N, by = .(condition)]
 
 ##########################################################################################
 # function to create boxplots from CPM
@@ -529,7 +591,7 @@ box_CPM <- function(this_gene) {
 				"Mouse_P1_003",
 				"Mouse_P1_004",
 				"dJMP4"))  %>%
-			filter(gene_name == this_gene | locus_tag == this_gene) %>%
+			filter(gene == this_gene | locus_tag == this_gene) %>%
 			mutate(Guide = factor(
 				as.character(offset),
 				levels = as.character(sort(unique(offset))))) %>%
@@ -557,14 +619,14 @@ median_melted_results %>%
 			medLFC < -1 & FDR < 0.05 ~ "Vulnerable",
 			medLFC > 1 & FDR < 0.05 ~ "Resistant",
 			TRUE ~ "No Response")) %>%
-	select(locus_tag, gene_name, condition, Response) %>% 
+	select(locus_tag, gene, condition, Response) %>% 
 	mutate(condition = case_when(
 		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
 		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
 		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro")) %>% 
-	filter(gene_name %like% "pur") %>% 
-	pivot_wider(id_cols = c(gene_name), names_from = condition, values_from = Response) %>% 
-	arrange(gene_name)
+	filter(gene %like% "pur") %>% 
+	pivot_wider(id_cols = c(gene), names_from = condition, values_from = Response) %>% 
+	arrange(gene)
 
 ################################################################################
 
@@ -574,11 +636,11 @@ median_melted_results %>%
 			medLFC < -1 & FDR < 0.05 ~ "Vulnerable",
 			medLFC > 1 & FDR < 0.05 ~ "Resistant",
 			TRUE ~ "No Response")) %>%
-	select(locus_tag, gene_name, condition, Response) %>% 
+	select(locus_tag, gene, condition, Response) %>% 
 	mutate(condition = case_when(
 		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
 		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
 		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro")) %>% 
-	filter(gene_name %like% "lpt") %>% 
-	pivot_wider(id_cols = c(gene_name), names_from = condition, values_from = Response) %>% 
-	arrange(gene_name)
+	filter(gene %like% "lpt") %>% 
+	pivot_wider(id_cols = c(gene), names_from = condition, values_from = Response) %>% 
+	arrange(gene)
