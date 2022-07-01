@@ -159,6 +159,7 @@ print(p)
 # Reproducibility among sample groups
 
 all_counts %>% 
+	left_join(annotations) %>% 
 	inner_join(exp_design) %>%
 	filter(!sample_group %like% "Gent" & !sample_group %like% "mating") %>%
 	mutate(type = case_when(gene %like% "Ctrl" ~ "control", TRUE ~ "knockdown")) %>% 
