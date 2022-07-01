@@ -20,7 +20,6 @@ p_load(
 )
 
 ##########################################################################################
-# girl, fix your annotations
 
 annotations <- fread("unified_counts/full_annotations.tsv")
 
@@ -156,15 +155,21 @@ print(p)
 
 ################################################################################
 
+# Figure ??
+# Reproducibility among sample groups
+
 all_counts %>% 
 	inner_join(exp_design) %>%
+	filter(!sample_group %like% "Gent" & !sample_group %like% "mating") %>%
+	mutate(type = case_when(gene %like% "Ctrl" ~ "control", TRUE ~ "knockdown")) %>% 
+	mutate(sample_group = gsub("inoculum_", "", sample_group)) %>%
 	ggplot(aes(x = CPM)) + 
 	geom_density(aes(fill = as.character(rep)), alpha = 0.25) + 	
 	scale_x_continuous(
 		trans = scales::pseudo_log_trans(base = 10),
 		breaks = c(0, 10^(1:6)),
 		labels = label_number_si()) + 
-	facet_wrap(facets = "sample_group") -> p
+	facet_grid(facets = c("type", "sample_group")) -> p
 
 print(p)
 
