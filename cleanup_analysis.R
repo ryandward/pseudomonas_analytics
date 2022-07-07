@@ -1,6 +1,6 @@
 library(pacman)
 
-p_load(data.table, tidyverse, edgeR)
+p_load(data.table, tidyverse, edgeR, poolr, scales, pheatmap)
 
 count_stats <- fread("stats.tsv", col.names = c("sequence", "count", "condition"))
 
@@ -11,19 +11,59 @@ all_guides <- fread("all_guides.tsv") %>%
 		gene = case_when(type == "control" ~ "control", gene == "-" ~ locus_tag, type == "knockdown" ~ gene),
 		guide = case_when(type == "control" ~ paste(gene, index), type != "control" ~ paste(gene, offset)))
 
+all_guides <- all_guides %>%
+	filter(!sequence %in% c(
+		"CCTTGATGCTGTTGAGGATC",
+		"TGGTCTGGGTGCGCTCGGAG",
+		"TAGTCAAAGATACCCCCGAA",
+		"GCTCGCGGTTTACTTCGACC"
+	))
+
 map_stats <- fread("map_stats.tsv")
 
 exp_design <- fread("unified_counts/exp_design.tsv")
-exp_design <- exp_design %>% group_by(gDNA_source, growth_condition, media) %>% mutate(rep = as.character(1:n())) %>% data.table
-exp_design[, sample_name := paste(gDNA_source, growth_condition, media , rep, sep = "_")]
-exp_design[, sample_group := paste(gDNA_source, growth_condition, media, sep = "_")]
 
 exp_design <- exp_design %>% inner_join(map_stats)
 
 exp_design <- exp_design %>% 
-	filter(reads > 5e6) %>%
-	mutate(match_prop = matched/reads) %>% 
-	filter(match_prop > 0.85)
+	#this one didn't get infected
+	filter(!growth_condition %like% "100x_inoculum_dilution") %>%
+	filter(!condition %in% c("dJMP3", "dJMP5")) %>%
+	# filter(!condition %in% c("dJMP1")) %>%
+	
+	data.table
+
+exp_design <- exp_design %>% mutate(sample_group = paste(gDNA_source, growth_condition, media, sep = "_"))
+ 
+exp_design <- exp_design %>%
+	mutate(match_prop = matched/reads)
+
+quality_decision <- count_stats %>% 
+	inner_join(all_guides) %>% 
+	pivot_wider(id_cols = c(type, sequence), names_from = condition, values_from = count, values_fill = 0) %>% 
+	pivot_longer(cols = -c(type, sequence), names_to = "condition", values_to = "count") %>% 
+	group_by(condition) %>% 
+	mutate(cpm = 1e6*(count/sum(count))) %>% 
+	group_by(condition, type) %>% 
+	summarise(cpm = sum(cpm)) %>% 
+	pivot_wider(id_cols = condition, names_from = type, values_from = cpm) %>%
+	arrange(desc(focused)) %>% inner_join(exp_design) %>% 
+	select(condition, control, focused, knockdown, media, gDNA_source, match_prop, reads)
+
+exp_design <- exp_design %>% 
+	inner_join(quality_decision) %>% 
+	filter(match_prop > 0.85 & reads > 5e6) %>%
+	group_by(sample_group) %>% 
+	mutate(rep = as.character(1:n())) 
+
+exp_design <- exp_design %>% mutate(sample_name = paste(gDNA_source, growth_condition, media , rep, sep = "_"))
+
+exp_design <- exp_design %>% filter(sample_group %in% (
+	exp_design %>% group_by(sample_group) %>% summarise(reps = max(rep)) %>% filter(reps > 1) %>% pull(sample_group)))
+
+exp_design <- exp_design %>% data.table
+
+################################################################################
 
 count_stats %>%
 	inner_join(all_guides) %>%
@@ -37,35 +77,20 @@ count_stats %>%
 	cor %>% 
 	round(4) %>% 
 	pheatmap(
-		cutree_rows = 8,
-		cutree_cols = 8,
+		cutree_rows = 4,
+		cutree_cols = 4,
 		display_numbers = T, 
 		number_format = "%.3f",
-		breaks = seq(0, 1, length.out = 9999),
+		breaks = seq(0.5, 1, length.out = 9999),
 		color=c(colorRampPalette(c("navy","white", "red"))(9997), "gray"))
 
-
-
-
-
-exp_design <- exp_design[!condition %in% c(
-	"dJMP1",
-	"Mouse_P1_008", 
-	"Mouse_P1_007", 
-	"P1_PA14", 
-	"Mouse_P1_005",
-	"Mouse_P1_020",
-	"P3_PA14",
-	"P2_PA14",
-	"P1_mfdpir")]
-
-# exp_design <- exp_design[!condition %in% c("dJMP3", "dJMP5")]
-
+################################################################################
 
 count_stats <- count_stats %>% filter(condition %in% exp_design$condition)
 
-
 setorder(exp_design, condition)
+setorder(count_stats, condition)
+
 
 count_stats.mat <- count_stats %>% 
 	inner_join(all_guides) %>% 
@@ -205,7 +230,7 @@ data_y <- calcNormFactors(data_y)
 
 data_y <- estimateDisp(data_y, data_permut)
 
-data_fit <- glmQLFit(data_y, data_permut, robust = TRUE)
+data_fit <- glmFit(data_y, data_permut, robust = T)
 
 data_CPM <- cpm(data_y, prior.count = 0)
 
@@ -230,7 +255,7 @@ results_LFC <- data.table(count_stats.quality)[, .(genes = unique(sequence))]
 
 for (i in 1:ncol(data_contrast)) {
 	
-	results <- glmQLFTest(data_fit, contrast = data_contrast[, i])
+	results <- glmLRT(data_fit, contrast = data_contrast[, i])
 	
 	results <- topTags(results, n = Inf)
 	
