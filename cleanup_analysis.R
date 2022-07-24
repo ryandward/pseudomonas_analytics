@@ -1,23 +1,86 @@
 library(pacman)
 
-p_load(data.table, tidyverse, edgeR, poolr, scales, pheatmap)
+p_load(data.table, tidyverse, edgeR, poolr, scales, pheatmap, viridis)
 
 count_stats <- fread("stats.tsv", col.names = c("sequence", "count", "condition"))
 
-all_guides <- fread("all_guides.tsv") %>% 
-	group_by(type) %>% 
-	mutate(
-		index = 1:n(),
-		gene = case_when(type == "control" ~ "control", gene == "-" ~ locus_tag, type == "knockdown" ~ gene),
-		guide = case_when(type == "control" ~ paste(gene, index), type != "control" ~ paste(gene, offset)))
-
-all_guides <- all_guides %>%
+all_guides <- fread("all_guides.tsv") %>%
 	filter(!sequence %in% c(
 		"CCTTGATGCTGTTGAGGATC",
 		"TGGTCTGGGTGCGCTCGGAG",
 		"TAGTCAAAGATACCCCCGAA",
-		"GCTCGCGGTTTACTTCGACC"
-	))
+		"GCTCGCGGTTTACTTCGACC")) %>%
+	group_by(type) %>% 
+	mutate(
+		offset = ifelse(
+			is.na(offset), 
+			NA_real_, 
+			offset),
+		offset = case_when(
+			is.na(offset) ~ 0, 
+			!is.na(offset) ~ offset),
+		index = 1:n(),
+		locus_tag = case_when(
+			type == "control" ~ "control",
+			type == "knockdown" ~ locus_tag,
+			type == "focused" ~ locus_tag),
+		gene = case_when(
+			type == "control" ~ "control", 
+			gene == "-" ~ locus_tag, 
+			type == "knockdown" ~ gene,
+			type == "focused" ~ "focused"),
+		guide = case_when(
+			type == "control" ~ paste(locus_tag, index), 
+			type == "focused" ~ paste(locus_tag, index),
+			type == "knockdown" ~ paste(locus_tag, offset)),
+		target_genome = case_when(
+			type == "focused" ~ "focused",
+			type == "control" ~ "control",
+			type == "knockdown" ~ "essential"))
+
+guide_definitions <- fread("guide_definitions.tsv")
+# guide names from Neha
+
+first_annotations <- fread("first_annotations.tsv")
+# my first attempt to annotate comprehensively
+
+synonyms <- fread("synonyms.tsv", fill = T, na.strings = c(""))
+
+y_genes_neha_found <- 
+	all_guides %>% 
+	left_join(guide_definitions) %>% 
+	left_join(first_annotations %>% select(gene_name, guide_name)) %>% 
+	filter(gene!= gene_name) %>% 
+	select(locus_tag, gene, gene_name, locus_tag) %>% 
+	left_join(synonyms) %>% 
+	filter(gene %like% "^y") %>% 
+	unique
+
+# use the names that Neha found for y-genes
+all_guides <- all_guides %>% 
+	left_join(y_genes_neha_found) %>%
+	mutate(gene = case_when(
+		!is.na(gene_name) ~ gene_name,
+		TRUE ~ gene)) %>%
+	select(-gene_name, -syn1, -syn2)
+
+all_guides <- all_guides %>% 
+	mutate(gene = case_when(
+		locus_tag == "PA14_07770" ~ "lptD",
+		locus_tag == "PA14_23560" ~ "gltX",
+		locus_tag == "PA14_12280" ~ "lnt",
+		locus_tag == "PA14_14880" ~ "ispG",
+		locus_tag == "PA14_17130" ~ "ispC",
+		locus_tag == "PA14_31290" ~ "lecA",
+		locus_tag == "PA14_32420" ~ "mexS",
+		locus_tag == "PA14_33530" ~ "fpvF",
+		locus_tag == "PA14_43970" ~ "lpd",
+		locus_tag == "PA14_62870" ~ "rlmE",
+		locus_tag == "PA14_72970" ~ "tonB1",
+		locus_tag == "PA14_65960" ~ "waaA",
+		locus_tag == "PA14_66060" ~ "waaE",
+		locus_tag == "PA14_66220" ~ "waaP",
+		TRUE ~ gene))
 
 map_stats <- fread("map_stats.tsv")
 
@@ -121,8 +184,8 @@ count_stats.mat %>%
 	scale_x_continuous(
 		trans = scales::pseudo_log_trans(base = 10),
 		breaks = c(0, 10^(1:6)),
-		labels = label_number_si()) + 
-	facet_grid(facets = c("gDNA_source", "growth_condition")) +
+		labels = label_number(scale_cut = cut_short_scale())) + 
+		facet_grid(facets = c("gDNA_source", "growth_condition")) +
 	ggtitle("Counts per Million") -> plot_object
 
 print(plot_object)
@@ -147,15 +210,18 @@ count_stats.mat.quality %>%
 	cbind(count_stats.mat.quality %>% select(type, sequence)) %>% 
 	pivot_longer(cols = -c(type, sequence), names_to = "condition", values_to = "cpm") %>% 
 	inner_join(exp_design) %>% 
-	unite("growth_condition", c(growth_condition, media)) %>%
+	# unite("growth_condition", c(growth_condition, media)) %>%
 	ggplot(aes(x = cpm)) + 
-	geom_density(aes(fill = rep), alpha = 0.25) + 	
+	geom_density(aes(fill = rep), alpha = 0.35) + 	
 	scale_x_continuous(
 		trans = scales::pseudo_log_trans(base = 10),
 		breaks = c(0, 10^(1:6)),
-		labels = label_number_si()) + 
-	facet_grid(facets = c("type", "sample_group")) +
-	ggtitle("Counts per Million") -> plot_object
+		labels = label_number(scale_cut = cut_short_scale())) + 
+	facet_grid(facets = c("type", "media")) +
+	ggtitle("Counts per Million") +
+	scale_fill_viridis(discrete = T, option = "mako") +
+	theme_bw() +
+	ggtitle("Distribution of Guides Recovered (Counts per Million)") -> plot_object
 
 print(plot_object)
 
@@ -176,7 +242,6 @@ conditions.quality <-
 	unique
 
 ##########################################################################################
-
 
 data_grid <- count_stats.quality %>% 
 	pivot_wider(id_cols = sequence, names_from = condition, values_from = count)
@@ -230,7 +295,7 @@ data_y <- calcNormFactors(data_y)
 
 data_y <- estimateDisp(data_y, data_permut)
 
-data_fit <- glmFit(data_y, data_permut, robust = T)
+data_fit <- glmQLFit(data_y, data_permut, robust = T)
 
 data_CPM <- cpm(data_y, prior.count = 0)
 
@@ -238,8 +303,8 @@ data_CPM <- cpm(data_y, prior.count = 0)
 
 contrast_levels <-
 	c("plated_6_generations_LB - plated_t0_inoculum",
-		"plated_10x_inoculum_dilution_mouse - plated_6_generations_LB",
-		"plated_10x_inoculum_dilution_mouse - plated_t0_inoculum")
+		"plated_10x_inoculum_dilution_mouse - plated_t0_inoculum",
+		"plated_10x_inoculum_dilution_mouse - plated_6_generations_LB")
 
 data_contrast <- makeContrasts(
 	contrasts = contrast_levels,
@@ -255,7 +320,7 @@ results_LFC <- data.table(count_stats.quality)[, .(genes = unique(sequence))]
 
 for (i in 1:ncol(data_contrast)) {
 	
-	results <- glmLRT(data_fit, contrast = data_contrast[, i])
+	results <- glmQLFTest(data_fit, contrast = data_contrast[, i])
 	
 	results <- topTags(results, n = Inf)
 	
@@ -274,7 +339,6 @@ for (i in 1:ncol(data_contrast)) {
 }
 
 ################################################################################
-
 
 melted_results_FDR <-
 	data.table::melt(
@@ -323,7 +387,6 @@ melted_results[, LFC := melted_results_by_condition[
 
 ################################################################################
 
-
 median_melted_results <-
 	melted_results[, .(
 		medLFC = median(LFC),
@@ -331,3 +394,75 @@ median_melted_results <-
 		by = .(locus_tag, gene, condition)]
 
 #################################################################################
+
+median_melted_results[gene != ".", gene_name_stylized := paste0("italic('", gene, "')")]
+median_melted_results[gene == ".", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene == "", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+median_melted_results[gene == "control", gene_name_stylized := paste0("bold('", locus_tag, "')")]
+
+################################################################################
+
+melted_results %>% inner_join(all_guides) %>% 
+	mutate(condition = case_when(
+		condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+		condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+		condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro")) %>%
+	ggplot(aes(x = LFC)) + 
+	geom_density(aes(fill = type), alpha = 0.35) + 	
+	scale_x_continuous(
+		trans = scales::pseudo_log_trans(base = 10),
+		breaks = c(0, 10^(1:6)),
+		labels = label_number(scale_cut = cut_short_scale())) + 
+	facet_wrap(facets = c("condition")) +
+	ggtitle("Counts per Million") +
+	scale_fill_viridis(discrete = T, option = "mako") +
+	theme_bw() +
+	ggtitle("Knockdown-induced Guide Composition Change (log-fold change)") -> plot_object
+
+print(plot_object)
+
+################################################################################
+
+median_melted_results %>% 
+	mutate(condition = case_when(
+		condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+		condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+		condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro")) %>%
+	ggplot(aes(x = medLFC)) + 
+	geom_density(aes(fill = condition), alpha = 0.35) + 	
+	scale_x_continuous(
+		trans = scales::pseudo_log_trans(base = 10),
+		breaks = c(0, 10^(1:6)),
+		labels = label_number(scale_cut = cut_short_scale())) + 
+	ggtitle("Counts per Million") +
+	scale_fill_viridis(discrete = T, option = "magma") +
+	theme_bw() +
+	ggtitle("Knockdown-induced Gene Composition Change (log-fold change)") -> plot_object
+
+print(plot_object)
+
+################################################################################
+# For pasting results into excel
+
+median_melted_results  %>% 	mutate(condition = case_when(
+	condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+	condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+	condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro")) %>%
+	pivot_wider(id_cols = c(locus_tag, gene), values_from = medLFC, names_from = condition) %>%
+	clipr::write_clip()
+# 
+median_melted_results  %>% 	mutate(condition = case_when(
+	condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+	condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+	condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro")) %>%
+	pivot_wider(id_cols = c(locus_tag, gene), values_from = FDR, names_from = condition) %>%
+	clipr::write_clip()
+# 
+# median_melted_results  %>% 
+# 	filter(FDR<0.01) %>%
+# 	mutate(condition = case_when(
+# 	condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+# 	condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+# 	condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro")) %>% 
+# 	pivot_wider(id_cols = c(locus_tag, gene), values_from = medLFC, names_from = condition) %>% 
+# 	clipr::write_clip()

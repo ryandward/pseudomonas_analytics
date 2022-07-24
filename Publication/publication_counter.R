@@ -19,6 +19,15 @@ p_load(
 	statmod
 )
 
+guide_definitions <- fread(
+	"guide_definitions.tsv",
+	na.strings = "#N/A")
+
+
+annotations <- fread(
+	"annotations.tsv",
+	na.strings = "#N/A")
+
 annotated_key <- fread("Publication/annotated_key.tsv")
 
 exp_design <- fread("Publication/exp_design.tsv")

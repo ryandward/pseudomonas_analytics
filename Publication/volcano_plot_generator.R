@@ -1,72 +1,15 @@
-source("Publication//publication_counter.R")
-
-library(pacman)
-
-p_load(
-	data.table,
-	scales,
-	edgeR,
-	pheatmap,
-	svglite,
-	ggplot2,
-	ggrepel,
-	colourpicker,
-	RColorBrewer,
-	poolr,
-	statmod
-)
-
-purine_enrichment <- fread("KW-0658.tsv", header = FALSE, col.names = c("gene_name"))
-
-
-#############################################################################
-# prepare data for volcano plots
-for (this.contrast in unique(median_melted_results$condition)) {
-	
-
-	to_plot <- median_melted_results[condition == this.contrast]
-	
-	setorder(to_plot, FDR)
-	
-	to_plot[FDR < 0.01, Significance := "FDR < 0.01"]
-	to_plot[FDR < 0.001, Significance := "FDR < 0.001"]
-	to_plot[FDR < 0.0001, Significance := "FDR < 0.0001"]
-	
-	plot_object <-
-		ggplot(
-			data = to_plot,
-			aes(x = medLFC, y = -log10(FDR))) +
-		geom_point(
-			aes(color = `Significance`),
-			size = 2) +
-		xlim(
-			median_melted_results[type != "control", min(medLFC)], median_melted_results[type != "control", max(medLFC)]) +
-		ylim(
-			median_melted_results[type != "control", min(-log10(FDR))], median_melted_results[type != "control", max(-log10(FDR))]) +
-		theme_bw(
-			base_size = 12) +
-			ggtitle(this.contrast) +
-				theme(
-			plot.title = element_text(size = 16),
-			axis.text = element_text(size = 14, color = "black"),
-			axis.title = element_text(size = 14, color = "black"),
-			legend.text = element_text(size = 14, color = "black"),
-			legend.title = element_text(size = 14, color = "black"),
-			legend.position = "bottom") +
-		geom_hline(
-			yintercept = 1.30103,
-			linetype = "dashed",
-			color = "red") +
-		geom_label_repel(
-			data = to_plot[gene_name %like% "isp"],
-			aes(label = gene_name_stylized),
-			size = 5,
-			box.padding = unit(0.5, "lines"),
-			point.padding = unit(0.5, "lines"),
-			max.iter = 500,
-			max.overlaps = 100,
-			parse = TRUE)
-
-	print(plot_object)
-}
-
+median_melted_results %>% filter(gene != "control") %>% 	
+	mutate(condition = case_when(
+		condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+		condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+		condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro")) %>% 
+	ggplot(aes(x = medLFC, y = FDR)) + 
+	geom_point(aes(colour = FDR < 0.01 & abs(medLFC) > 1)) + 
+	facet_wrap(facets = c("condition")) + 
+	theme_bw() + 
+	theme(legend.position = "bottom") +
+	scale_color_manual(values = c("gray", "red"), na.value = "grey") +
+	geom_label_repel(
+		data = . %>% filter(FDR < 1e-30),
+		aes(label = gene)) +
+	scale_y_continuous(trans = scales::reverse_trans() %of% scales::log10_trans())

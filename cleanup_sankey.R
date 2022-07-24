@@ -1,3 +1,5 @@
+source("cleanup_analysis.R")
+
 p_load(ggsankey, tidyverse, viridis)
 
 sankey.levels <- c(
@@ -41,8 +43,10 @@ sankey.df %>%
 		node.color = "black") +
 	scale_fill_manual(values = c(
 		"light blue", "grey", "red")) +
-	geom_sankey_label(aes(colour = "node"),
-										size = 3.5, color = 1) +
+	geom_sankey_label(
+		aes(colour = "node"),
+		size = 3.5, 
+		color = 1) +
 	theme_sankey(base_size = 16) +
 	guides(
 		fill = guide_legend(title = "Relative Response to Knockdown")) +

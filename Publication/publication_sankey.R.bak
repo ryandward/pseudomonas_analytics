@@ -1,0 +1,161 @@
+p_load(ggsankey, tidyverse, viridis, ggallin)
+
+
+doc_theme <- theme_ipsum(
+	base_family = "Arial", 
+	caption_margin = 12,
+	axis_title_size = 12,
+	axis_col = "black")
+
+################################################################################
+# 
+# median_melted_results %>% 
+# 	mutate(
+# 		Response = case_when(
+# 			medLFC < -1 & FDR < 0.05 ~ "Vulnerable",
+# 			medLFC < 1 & FDR < 0.05 ~ "Resistant",
+# 			
+# 			TRUE ~ "No Response")) %>%
+# 	select(locus_tag, condition, Response) %>% 
+# 	mutate(condition = case_when(
+# 		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
+# 		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
+# 		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro"))	%>%
+# 	pivot_longer(!c(condition, locus_tag)) %>% 
+# 	pivot_wider(id_cols = c(locus_tag), names_from = condition, values_from = value) %>%
+# 	make_long(`In vitro`, `In vivo`, `In vivo v. in vitro` ) %>% 
+# 	ggplot(aes(
+# 		x = x, 
+# 		next_x = next_x,
+# 		node = node,
+# 		next_node = next_node,
+# 		fill = factor(node),
+# 		label = node)) +
+# 	geom_sankey(
+# 		flow.colour = "black",
+# 		flow.alpha = 0.25, 
+# 		node.color = "black") +
+# 	# scale_fill_viridis(
+# 	# 	discrete = T, direction = 1, option = "inferno", alpha = 0.55) +
+# 	scale_fill_manual(values = c(
+# 		"grey", "#63ccff", "#ff6f60")) +
+# 	geom_sankey_label(aes(colour = "node"),
+# 										size = 3.5, color = 1) +
+# 	theme_sankey(base_size = 16) +
+# 	guides(
+# 		fill = guide_legend(title = "Relative Response to Knockdown")) +
+# 	theme(
+# 		axis.title.x = element_blank(),
+# 		legend.position = "bottom")
+# 
+################################################################################
+
+sankey.levels <- c(
+	"Resistant",
+	"No Response",
+	"Vulnerable")
+
+
+sankey.df <- median_melted_results %>%
+	mutate(
+		Response = case_when(
+			medLFC < -1 & FDR < 0.05 ~ "Vulnerable",
+			medLFC > 1 & FDR < 0.05 ~ "Resistant",
+			TRUE ~ "No Response")) %>%
+	select(locus_tag, condition, Response) %>% 
+	mutate(condition = case_when(
+		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
+		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
+		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro"))	%>%
+	pivot_longer(!c(condition, locus_tag)) %>% 
+	pivot_wider(id_cols = c(locus_tag), names_from = condition, values_from = value) %>%
+	make_long(`In vitro`, `In vivo`, `In vivo v. in vitro`) %>%
+	mutate(
+		node = factor(node, levels = sankey.levels),
+		next_node = factor(next_node, levels = sankey.levels))
+
+sankey.tally <- sankey.df %>% group_by(node, x) %>% tally
+
+sankey.df %>% 
+	inner_join(sankey.tally) %>%
+	ggplot(aes(
+		x = x,
+		next_x = next_x,
+		node = node,
+		next_node = next_node,
+		fill = factor(node),
+		label = paste(node, n, sep = "\n"))) +
+	geom_sankey(
+		flow.colour = "black",
+		flow.alpha = 0.25,
+		node.color = "black") +
+	scale_fill_manual(values = c(
+		"#63ccff", "grey", "#e53935")) +
+	geom_sankey_label(aes(colour = "node"),
+										size = 3.5, color = 1) +
+	theme_sankey(base_size = 16) +
+	guides(
+		fill = guide_legend(title = "Relative Response to Knockdown")) +
+	theme(
+		axis.title.x = element_blank(),
+		legend.position = "none") -> p
+
+print(p)
+
+################################################################################
+
+median_melted_results %>%
+	filter(type != "control") %>%
+	mutate(
+		Response = case_when(
+			medLFC < -1 & FDR < 0.01 ~ "Vulnerable",
+			medLFC > 1 & FDR < 0.05 ~ "Resistant",
+			TRUE ~ "No Response")) %>%
+	select(locus_tag, condition, Response) %>% 
+	mutate(condition = case_when(
+		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "Mouse",
+		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "Mouse v. Culture",
+		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "Culture"))	%>%
+	pivot_longer(!c(condition, locus_tag)) %>% 
+	pivot_wider(id_cols = c(locus_tag), names_from = condition, values_from = value) %>% 
+	mutate(
+		Bin = case_when(
+			`Mouse` == "Resistant" ~ "Mouse Resistant", 
+			`Culture` == "Vulnerable" ~ "Culture Vulnerable", 
+			`Mouse` == "Vulnerable" ~ "Mouse Vulnerable") ) %>% 
+	select(locus_tag, Bin) %>% 
+	inner_join(annotated_key %>% select(locus_tag, gene_name)) %>% 
+	unique %>% 
+	mutate(
+		gene_name = case_when(
+			gene_name == "." ~ locus_tag,
+			gene_name != "." ~ gene_name)) %>% 
+	inner_join(
+		median_melted_results %>% 
+			filter(condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0"), 
+		on = "locus_tag") %>%
+	mutate(Pathway = case_when(
+		gene_name %in% c("comL", "lolA", "omlA", "lolB", "ostA", "lptC", "kdsA", "gmhB") ~ "LPS",
+		gene_name %in% c("folD", "purA", "purN", "guaA", "purL") ~ "Purine",
+		gene_name %in% c("ispD", "orfN", "rpoN") ~ "Virulence Factors")) %>%
+	arrange(Pathway) %>%
+	ggplot(aes(x = medLFC, y = FDR)) + 
+	geom_point(aes(colour = Pathway, alpha = Pathway)) +
+	theme(legend.position = "bottom") +
+	scale_y_continuous(trans = scales::reverse_trans() %of% scales::log10_trans()) +
+	geom_label_repel(
+		data = . %>% filter(
+				FDR < 1e-8),
+		aes(label = gene_name_stylized),
+		parse = TRUE) +
+	geom_hline(yintercept = 0.05,
+						 linetype = "dashed",
+						 color = "black") +
+	# geom_vline(xintercept = c(-1, 1),
+	# 					 linetype = "dashed",
+	# 					 color = "black") +
+	scale_alpha_manual(values = c(1, 1, 1, 1), na.value = 0.5) +
+	doc_theme -> p
+
+print(p)
+	
