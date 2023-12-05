@@ -28,7 +28,8 @@ median_melted_results %>% filter(gene != "control") %>%
 			filter(gene != "control") %>% 
 			arrange(FDR) %>% 
 			mutate(index = 1:n()) %>% 
-			filter((index <=10 & FDR < 0.05) | gene %in% c("pgsA", "orfN", "cysS")),
+			# filter((index <=10 & FDR < 0.05) | gene %in% c("pgsA", "orfN", "cysS")),
+			filter(gene %in% c("pgsA", "orfN", "cysS")),
 		# filter(gene %in% top_ten$gene & FDR < 0.05),
 		min.segment.length = 0,
 		parse = TRUE,
@@ -61,3 +62,60 @@ melted_results %>% filter(gene != "control") %>%
 		max.overlaps = Inf,
 		aes(label = guide)) +
 	scale_y_continuous(trans = scales::reverse_trans() %of% scales::log10_trans())
+
+################################################################################
+
+genes_of_interest <- c(
+	"pgsA",
+	"orfN",
+	"cysS",
+	"purB",
+	"purE",
+	"purH",
+	"purK",
+	"purL",
+	"purN",
+	"lptA",
+	"lptH",
+	"lptB",
+	"lptC",
+	"lptD",
+	"lptE",
+	"lptF",
+	"lptG",
+	"rpoN",
+	"ispD"
+)
+
+median_melted_results %>% 
+	filter(gene != "control") %>% 	
+	mutate(condition = case_when(
+		condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+		condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+		condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro"
+	)) %>% 
+	ggplot(aes(x = medLFC, y = FDR)) + 
+	geom_point(aes(alpha = FDR < 0.05 & abs(medLFC) > 1), colour = "gray") + 
+	facet_wrap(facets = c("condition")) + 
+	doc_theme + 
+	theme(legend.position = "bottom") +
+	geom_hline(yintercept = 0.05, linetype = "dashed", color = "red") +
+	geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "red") +
+	geom_label_repel(
+		data = . %>% 
+			group_by(condition) %>% 
+			filter(gene != "control") %>% 
+			arrange(FDR) %>% 
+			mutate(index = 1:n()) %>% 
+			filter(gene %in% genes_of_interest),
+		min.segment.length = 0,
+		parse = TRUE,
+		max.overlaps = Inf,
+		aes(
+			label = gene,
+			alpha = FDR < 0.05 & abs(medLFC) > 1)
+	) +
+	scale_alpha_manual(values = c(0.5, 1), guide = "none") +
+	scale_y_continuous(trans = scales::reverse_trans() %of% scales::log10_trans())
+
+
