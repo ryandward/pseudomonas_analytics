@@ -17,7 +17,7 @@ contrast_list$levels <- dge$design
 
 contrasts <- do.call(makeContrasts, contrast_list)
 
-all_string <- fread("STRG0A01FJP.protein.enrichment.terms.v12.0.txt.gz") %>%
+all_string <- fread("Enrichments/STRG0A01FJP.protein.enrichment.terms.v12.0.txt.gz") %>%
   mutate(locus_tag = str_replace(`#string_protein_id`, ".*\\.", "")) %>%
   unique()
 
@@ -165,12 +165,12 @@ annotated_data <- dge$samples %>%
 # Export the results #################################################################
 
 
-all_sets_for_export <- allsets %>%
+all_sets_for_export <- all_sets %>%
   filter(FDR <= 0.05) %>%
   select(term, description, gene_count, genes_targeted, guide_count, FDR, contrast)
 
 
-fwrite(all_sets_for_export, "all_sets_for_export.tsv", sep = "\t")
+fwrite(all_sets_for_export, "Enrichments/annotated_gene_set_enrichments.tsv", sep = "\t")
 
 
 ### Plot Crafting Area #################################################################
