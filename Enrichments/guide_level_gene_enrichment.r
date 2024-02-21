@@ -1,4 +1,4 @@
-source("../cleanup_analysis.R")
+source("cleanup_analysis.R")
 
 dge <- data_y
 

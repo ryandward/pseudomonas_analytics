@@ -32,7 +32,7 @@ all_guides <- fread("all_guides.tsv") %>%
       type == "control" ~ "control",
       gene == "-" ~ locus_tag,
       type == "knockdown" ~ gene,
-      type == "focused" ~ "focused"
+      type == "focused" ~ gene
     ),
     guide = case_when(
       type == "control" ~ paste(locus_tag, index),
