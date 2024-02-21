@@ -169,13 +169,26 @@ all_sets_for_export <- all_sets %>%
   filter(FDR <= 0.05) %>%
   select(term, description, gene_count, genes_targeted, guide_count, FDR, contrast) %>%
   mutate(contrast = case_when(
-  contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
-  contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-  contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
-  )) 
+    contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
+    contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
+    contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
+  ))
 
 fwrite(all_sets_for_export, "Enrichments/annotated_gene_set_enrichments.tsv", sep = "\t")
 
+
+all_sets_for_export_with_genes <- enrichments %>%
+  inner_join(targets) %>%
+  arrange(gene) %>%
+  group_by(term) %>%
+  select(term, description, gene) %>%
+  unique() %>%
+  mutate(genes = paste(gene, collapse = ", ")) %>%
+  select(term, description, genes) %>%
+  unique() %>%
+  inner_join(all_sets_for_export)
+
+fwrite(all_sets_for_export_with_genes, "Enrichments/annotated_gene_set_enrichments_with_genes.tsv", sep = "\t")
 
 ### Plot Crafting Area #################################################################
 ### you could create a function out of this
@@ -201,13 +214,11 @@ enrichment_plot <- contrast_assignments %>%
       inner_join(contrast_assignments) %>%
       mutate(contrast = factor(contrast, levels = unique(contrast)))
   ) %>%
-
   mutate(contrast = case_when(
-  contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
-  contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-  contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
+    contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
+    contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
+    contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
   )) %>%
-
   mutate(label = paste(contrast, paste("FDR:", signif(FDR, 2)), paste(Direction, paste(paste(genes_targeted, gene_count, sep = "/"), " genes present", sep = "")), sep = "\n")) %>%
   mutate(label = factor(label, levels = unique(label))) %>%
   inner_join(enrichments) %>%
@@ -215,12 +226,10 @@ enrichment_plot <- contrast_assignments %>%
   inner_join(annotated_data) %>%
   inner_join(v_targets) %>%
   arrange(assignment) %>%
-
   mutate(assignment = case_when(
     assignment == 1 ~ "Treatment",
     assignment == -1 ~ "Control"
   )) %>%
-
   mutate(group = case_when(
     group == "plated_6_generations_LB" ~ "LB",
     group == "plated_t0_inoculum" ~ "INOCULUM",
@@ -244,26 +253,3 @@ enrichment_plot <- contrast_assignments %>%
 
 
 plot(enrichment_plot)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
