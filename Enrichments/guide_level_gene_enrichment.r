@@ -167,8 +167,12 @@ annotated_data <- dge$samples %>%
 
 all_sets_for_export <- all_sets %>%
   filter(FDR <= 0.05) %>%
-  select(term, description, gene_count, genes_targeted, guide_count, FDR, contrast)
-
+  select(term, description, gene_count, genes_targeted, guide_count, FDR, contrast) %>%
+  mutate(contrast = case_when(
+  contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
+  contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
+  contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
+  )) 
 
 fwrite(all_sets_for_export, "Enrichments/annotated_gene_set_enrichments.tsv", sep = "\t")
 
