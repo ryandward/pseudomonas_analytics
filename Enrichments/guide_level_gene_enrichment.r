@@ -1,5 +1,7 @@
 source("cleanup_analysis.R")
 
+p_load("ggforce")
+
 dge <- data_y
 
 colnames(dge$design) <- gsub("[^[:alnum:]]", "_", colnames(dge$design))
@@ -195,7 +197,8 @@ fwrite(all_sets_for_export_with_genes, "Enrichments/annotated_gene_set_enrichmen
 
 # this_term <- "CL:2702"
 # this_term <- "CL:2730"
-this_term <- "CL:2388"
+# this_term <- "CL:2388"
+this_term <- "GO:0006720"
 
 title <- term_stats %>%
   filter(term == this_term) %>%
@@ -214,40 +217,101 @@ enrichment_plot <- contrast_assignments %>%
       inner_join(contrast_assignments) %>%
       mutate(contrast = factor(contrast, levels = unique(contrast)))
   ) %>%
-  mutate(contrast = case_when(
-    contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
-    contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-    contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
-  )) %>%
-  mutate(label = paste(contrast, paste("FDR:", signif(FDR, 2)), paste(Direction, paste(paste(genes_targeted, gene_count, sep = "/"), " genes present", sep = "")), sep = "\n")) %>%
-  mutate(label = factor(label, levels = unique(label))) %>%
-  inner_join(enrichments) %>%
-  inner_join(targets) %>%
-  inner_join(annotated_data) %>%
-  inner_join(v_targets) %>%
-  arrange(assignment) %>%
-  mutate(assignment = case_when(
-    assignment == 1 ~ "Treatment",
-    assignment == -1 ~ "Control"
-  )) %>%
-  mutate(group = case_when(
-    group == "plated_6_generations_LB" ~ "LB",
-    group == "plated_t0_inoculum" ~ "INOCULUM",
-    group == "plated_10x_inoculum_dilution_mouse" ~ "mouse"
-  )) %>%
-  mutate(group = factor(group, levels = unique(group))) %>%
-  ggplot(aes(x = as.character(assignment), y = cpm)) +
-  geom_sina(aes(color = group), scale = "width") +
-  geom_violin(alpha = 0.35, draw_quantiles = c(0.25, 0.5, 0.75), scale = "width", lwd = 1.25) +
-  geom_tile(aes(alpha = factor(ifelse(FDR <= 0.05, "highlight", "no_highlight"))), width = Inf, height = Inf, fill = "light grey") +
-  scale_alpha_manual(values = c("highlight" = 0.00, "no_highlight" = 0.025), guide = FALSE) +
-  scale_size(range = c(0.1, 3)) +
+  mutate(
+    contrast = case_when(
+      contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
+      contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
+      contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
+    )
+  ) %>%
+  mutate(
+    label = paste(
+      contrast,
+      paste(
+        "FDR:",
+        signif(FDR, 2)
+      ),
+      paste(
+        Direction,
+        paste(
+          paste(
+            genes_targeted, gene_count,
+            sep = "/"
+          ), " genes present",
+          sep = ""
+        )
+      ),
+      sep = "\n"
+    )
+  ) %>%
+  mutate(
+    label = factor(label, levels = unique(label))
+  ) %>%
+  inner_join(
+    enrichments
+  ) %>%
+  inner_join(
+    targets
+  ) %>%
+  inner_join(
+    annotated_data
+  ) %>%
+  inner_join(
+    v_targets
+  ) %>%
+  arrange(
+    assignment
+  ) %>%
+  mutate(
+    assignment = case_when(
+      assignment == 1 ~ "Treatment",
+      assignment == -1 ~ "Control"
+    )
+  ) %>%
+  mutate(
+    group = case_when(
+      group == "plated_6_generations_LB" ~ "LB",
+      group == "plated_t0_inoculum" ~ "INOCULUM",
+      group == "plated_10x_inoculum_dilution_mouse" ~ "mouse"
+    )
+  ) %>%
+  mutate(
+    group = factor(group, levels = unique(group))
+  ) %>%
+  ggplot(
+    aes(x = as.character(assignment), y = cpm)
+  ) +
+  geom_sina(
+    aes(color = group),
+    # scale = "width"
+  ) +
+  geom_violin(
+    alpha = 0.35,
+    draw_quantiles = c(0.25, 0.5, 0.75),
+    # scale = "width",
+    lwd = 1.25
+  ) +
+  geom_tile(
+    aes(alpha = factor(ifelse(FDR <= 0.05, "highlight", "no_highlight"))),
+    width = Inf, height = Inf, fill = "light grey"
+  ) +
+  scale_alpha_manual(
+    values = c("highlight" = 0.00, "no_highlight" = 0.025), guide = FALSE
+  ) +
+  scale_size(
+    range = c(0.1, 3)
+  ) +
   scale_y_continuous(
     trans = scales::pseudo_log_trans(base = 10),
     breaks = c(10^(0:5)),
     labels = scales::label_number(scale_cut = scales::cut_short_scale())
   ) +
   facet_wrap(~label) +
+  # label x axis "Assignment" and y axis "Counts per million"
+  labs(
+    x = NULL,
+    y = "Counts per Million"
+  ) +
   ggtitle(title) +
   theme_minimal()
 
