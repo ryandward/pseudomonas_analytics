@@ -104,6 +104,10 @@ v_targets <- v$E %>%
   )
 
 
+no_effect_spacers <- which(rownames(v) %in% (targets %>% filter(type == "control") %>% pull(spacer)))
+
+control_set_index <- list(ControlSet = no_effect_spacers)
+
 # Perform the competitive gene set test for all gene sets
 all_sets <- lapply(colnames(contrasts), function(contrast_name) {
   contrast_column <- contrasts[, contrast_name]
@@ -111,14 +115,28 @@ all_sets <- lapply(colnames(contrasts), function(contrast_name) {
     v,
     index = sets_to_locus_tags_indices,
     design = dge$design,
-    # inter.gene.cor = 0.05,
-    contrast = contrast_column
+    contrast = contrast_column,
   ) %>%
     data.table(keep.rownames = "term") %>%
     mutate(term = factor(term, levels = unique_terms), contrast = contrast_name)
   result
 }) %>%
   do.call(rbind, .)
+
+control_set <- lapply(colnames(contrasts), function(contrast_name) {
+  contrast_column <- contrasts[, contrast_name]
+  result <- camera(
+    v,
+    index = control_set_index,
+    design = dge$design,
+    contrast = contrast_column,
+  ) %>%
+    data.table(keep.rownames = "term") %>%
+    mutate(term = factor(term, levels = unique_terms), contrast = contrast_name)
+  result
+}) %>%
+  do.call(rbind, .)
+
 
 all_sets <- all_sets %>%
   inner_join(enrichments) %>%
@@ -199,7 +217,8 @@ fwrite(all_sets_for_export_with_genes, "Enrichments/annotated_gene_set_enrichmen
 # this_term <- "CL:2730"
 # this_term <- "CL:2388"
 # this_term <- "GO:0006720" # with ispD
-this_term <- "GO:0045229" # with orfN
+# this_term <- "GO:0045229" # with orfN
+this_term <- "GO:0044205" # significantly up
 
 title <- term_stats %>%
   filter(term == this_term) %>%
@@ -470,3 +489,4 @@ plot(enrichment_plot)
 
 
 # plot(enrichment_plot)
+
