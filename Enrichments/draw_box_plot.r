@@ -1,4 +1,9 @@
-this_term <- "GO:0045229" # with ispD
+source("Enrichments/guide_level_gene_enrichment.r")
+source("final_analytical_questions.r")
+
+# this_term <- "GO:0045229" # with orfN
+# this_term <- "GO:0006720" # with ispD
+this_term <- "CL:2388" # large
 
 title <- term_stats %>%
   filter(term == this_term) %>%
@@ -14,27 +19,28 @@ this_gene_count <- all_sets %>%
   filter(term == this_term) %>%
   pull(gene_count)
 
-  title = paste(
-    title, "\n",
-    paste(
-      this_genes_targeted, this_gene_count,
-      sep = "/"
-    ),
-    " genes present",
-    sep = " "
-  )
+title <- paste(
+  title, "\n",
+  paste(
+    this_genes_targeted, this_gene_count,
+    sep = "/"
+  ),
+  " genes present",
+  sep = " "
+)
 
 enrichment_plot <- contrast_assignments %>%
-filter(assignment == 1) %>%
+  filter(assignment == 1) %>%
   inner_join(
-    melted_results %>% 
-    rename(contrast = condition, `Guide-level\nFDR` = FDR)) %>%
+    non_normalized_melted_results %>%
+      rename(contrast = condition, `Guide-level\nFDR` = FDR)
+  ) %>%
   inner_join(
     group_assignments,
     relationship = "many-to-many"
   ) %>%
   mutate(`Guide-level\nLog-fold change` = case_when(
-    assignment == -1 ~0,
+    assignment == -1 ~ 0,
     assignment == 1 ~ LFC
   )) %>%
   inner_join(
@@ -43,7 +49,7 @@ filter(assignment == 1) %>%
       inner_join(contrast_assignments) %>%
       mutate(contrast = factor(contrast, levels = unique(contrast)))
   ) %>%
-    mutate(Direction = case_when(
+  mutate(Direction = case_when(
     FDR <= 0.05 ~ Direction,
     TRUE ~ "No change"
   )) %>%
@@ -62,8 +68,6 @@ filter(assignment == 1) %>%
         signif(FDR, 2)
       ),
       Direction,
-
-      
       sep = "\n"
     )
   ) %>%
@@ -101,13 +105,13 @@ filter(assignment == 1) %>%
   arrange(abs(`Guide-level\nLog-fold change`)) %>%
   mutate(
     group = factor(group, levels = unique(group))
-  ) %>% 
+  ) %>%
   select(
-    assignment, `Guide-level\nLog-fold change`, `Guide-level\nFDR`, label, FDR) %>% 
-    unique() %>%
-
+    assignment, `Guide-level\nLog-fold change`, `Guide-level\nFDR`, label, FDR, spacer
+  ) %>%
+  unique() %>%
   ggplot(
-    aes(x = label, y = `Guide-level\nLog-fold change` )
+    aes(x = label, y = `Guide-level\nLog-fold change`)
   ) +
   # draw a horizontal line at 0
   geom_hline(yintercept = 0, color = "darkgrey", lwd = 1.5, lty = "dashed") +
@@ -124,7 +128,7 @@ filter(assignment == 1) %>%
     shape = 21,
     color = "black",
     # lwd = 0.1,
-    # scale = "width"
+    scale = "count"
   ) +
   geom_boxplot(
     aes(
@@ -133,7 +137,7 @@ filter(assignment == 1) %>%
     alpha = 0.0,
     # draw_quantiles = c(0.25, 0.5, 0.75),
     # scale = "width",
-    lwd = 1
+    lwd = 0.5
   ) +
   scale_alpha_manual(
     values = c("highlight" = 0.00, "no_highlight" = 0.025), guide = FALSE
@@ -166,6 +170,9 @@ filter(assignment == 1) %>%
 
 
 plot(enrichment_plot)
+
+
+
 
 
 
