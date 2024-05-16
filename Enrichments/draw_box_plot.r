@@ -1,15 +1,22 @@
 source("Enrichments/guide_level_gene_enrichment.r")
 source("final_analytical_questions.r")
 
-this_term <- "GO:0045229" # with orfN and pgsA
-# this_term <- "GO:0006720" # with ispD
+# this_term <- "GO:0045229" # with orfN 
+# this_term <- "CL:2706" # with orfN
+# this_term <- "GO:0046486" #with pgs
+this_term <- "KW-0658" # purine biogenesis
 # this_term <- "CL:2388" # large
-
+# this_term <- "GO:0046474"
+# this_term <- "GO:0016780" # with orfN and pgsA
+# this_term <- "GO:0006629" #lipid metabolic process with orfN
 title <- term_stats %>%
   filter(term == this_term) %>%
   pull(description)
 
+
 title <- paste(title, " (", this_term, ")", sep = "")
+
+title <- title %>% stringr::str_wrap(width = 50)
 
 this_genes_targeted <- all_sets %>%
   filter(term == this_term) %>%
@@ -160,7 +167,12 @@ enrichment_plot <- contrast_assignments %>%
     y = "Guide-level log-fold change"
   ) +
   ggtitle(title) +
-  scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) +
+scale_fill_gradient2(
+  low = rgb(1, 0, 0, alpha=0.5), 
+  mid = rgb(1, 1, 1, alpha=0.5), 
+  high = rgb(0, 0, 1, alpha=0.5), 
+  midpoint = 0
+) +
   scale_size_continuous(range = c(10, 2), trans = "log10") +
   theme_minimal() +
   # turn angle to 45 degrees
@@ -171,14 +183,4 @@ enrichment_plot <- contrast_assignments %>%
     plot.title = element_text(hjust = 0.5)
   )
 
-
 plot(enrichment_plot)
-
-
-
-
-
-
-
-
-
