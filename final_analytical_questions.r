@@ -421,9 +421,9 @@ non_normalized_melted_results <-
   rename(sequence = genes) %>%
   inner_join(all_guides)
 
-non_normalized_non_normalized_melted_results <- non_normalized_melted_results[!is.na(FDR)]
+non_normalized_melted_results <- non_normalized_melted_results[!is.na(FDR)]
 
-non_normalized_non_normalized_melted_results %>%
+non_normalized_melted_results %>%
   mutate(condition = case_when(
     condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
     condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
@@ -436,7 +436,7 @@ non_normalized_non_normalized_melted_results %>%
   theme(legend.position = "bottom") +
   scale_y_continuous(trans = scales::reverse_trans() %of% scales::log10_trans())
 
-non_normalized_non_normalized_melted_results %>%
+non_normalized_melted_results %>%
   filter(FDR <= 0.05) %>%
   mutate(condition = case_when(
     condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
@@ -459,7 +459,7 @@ pur_significant <- median_melted_results %>%
 
 # create boxplots for pur genes from non_normalized_melted_results
 pur_significant %>%
-  inner_join(non_normalized_non_normalized_melted_results) %>%
+  inner_join(non_normalized_melted_results) %>%
   filter(gene %like% "pur") %>%
   mutate(condition = case_when(
     condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
