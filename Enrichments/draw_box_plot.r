@@ -1,9 +1,9 @@
 source("Enrichments/guide_level_gene_enrichment.r")
 source("final_analytical_questions.r")
 
-# this_term <- "GO:0045229" # with orfN
+this_term <- "GO:0045229" # with orfN and pgsA
 # this_term <- "GO:0006720" # with ispD
-this_term <- "CL:2388" # large
+# this_term <- "CL:2388" # large
 
 title <- term_stats %>%
   filter(term == this_term) %>%
