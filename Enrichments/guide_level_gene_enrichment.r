@@ -218,7 +218,12 @@ fwrite(all_sets_for_export_with_genes, "Enrichments/annotated_gene_set_enrichmen
 # this_term <- "CL:2388"
 # this_term <- "GO:0006720" # with ispD
 # this_term <- "GO:0045229" # with orfN
-this_term <- "GO:0044205" # significantly up
+# this_term <- "GO:0044205" # significantly up
+this_term <- "KW-0658"
+this_term <- "GO:0046486"
+this_term <- "CL:2706"
+this_term <- "GO:0006629"
+this_term <- "GO:0009156"
 
 title <- term_stats %>%
   filter(term == this_term) %>%
@@ -234,9 +239,9 @@ enrichment_plot <- contrast_assignments %>%
     group_assignments,
     relationship = "many-to-many"
   ) %>%
-  mutate(`Guide-level Log-fold Change` = case_when(
-    assignment == -1 ~0,
-    assignment == 1 ~ LFC
+  mutate(`Log10 Relative Abundance` = case_when(
+    assignment == -1 ~ log10(2^-LFC/2),
+    assignment == 1 ~ log10(2^LFC/2)
   )) %>%
   inner_join(
     all_sets %>%
@@ -244,6 +249,10 @@ enrichment_plot <- contrast_assignments %>%
       inner_join(contrast_assignments) %>%
       mutate(contrast = factor(contrast, levels = unique(contrast)))
   ) %>%
+  mutate(Direction = case_when(
+    FDR <= 0.05 ~ Direction,
+    TRUE ~ "No change"
+  )) %>%
   mutate(
     contrast = case_when(
       contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
@@ -259,7 +268,9 @@ enrichment_plot <- contrast_assignments %>%
         signif(FDR, 2)
       ),
       paste(
-        Direction,
+        paste(
+          Direction, 
+          "—"),
         paste(
           paste(
             genes_targeted, gene_count,
@@ -302,7 +313,7 @@ enrichment_plot <- contrast_assignments %>%
       group == "plated_10x_inoculum_dilution_mouse" ~ "mouse"
     )
   ) %>%
-  arrange(abs(`Guide-level Log-fold Change`)) %>%
+  arrange(abs(`Log10 Relative Abundance`)) %>%
   mutate(
     group = factor(group, levels = unique(group))
   ) %>%
@@ -315,18 +326,19 @@ enrichment_plot <- contrast_assignments %>%
   ) +
   geom_sina(
     aes(
-      fill = `Guide-level Log-fold Change`,
+      fill = `Log10 Relative Abundance`,
       size = `Guide-level FDR`,
-      # weight = -log10(`Guide-level FDR`)
+      weight = -log10(`Guide-level FDR`)
     ),
     shape = 21,
-    color = "darkgrey",
-    lwd = 0.1
-    # scale = "width"
+    color = "black",
+    lwd = 0.1,
+    alpha = 0.5,
+    scale = "area",
   ) +
-  geom_violin(
+  geom_boxplot(
     aes(
-      # weight = -log10(`Guide-level FDR`)
+      weight = -log10(`Guide-level FDR`)
     ),
     alpha = 0.0,
     draw_quantiles = c(0.25, 0.5, 0.75),
@@ -350,15 +362,12 @@ enrichment_plot <- contrast_assignments %>%
     x = NULL,
     y = "Counts per Million"
   ) +
-  ggtitle(title) +
+  ggtitle(title %>% stringr::str_wrap(width = 50)) +
   scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) +
   scale_size_continuous(range = c(5, 1), limits = c(0, 1)) +
   theme_minimal()
 
-
 plot(enrichment_plot)
-
-
 
 
 
@@ -489,4 +498,9 @@ plot(enrichment_plot)
 
 
 # plot(enrichment_plot)
+
+
+
+
+
 
