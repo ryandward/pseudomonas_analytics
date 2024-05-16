@@ -29,6 +29,9 @@ title <- paste(
   sep = " "
 )
 
+# non_normalized_melted_results <- non_normalized_melted_results_LFC %>% 
+#   inner_join(non_normalized_melted_results_FDR)
+
 enrichment_plot <- contrast_assignments %>%
   filter(assignment == 1) %>%
   inner_join(
