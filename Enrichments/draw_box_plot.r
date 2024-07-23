@@ -1,11 +1,13 @@
 source("Enrichments/guide_level_gene_enrichment.r")
 source("final_analytical_questions.r")
 
-# this_term <- "GO:0045229" # with orfN 
+require(ggbeeswarm)
+
+# this_term <- "GO:0045229" # with orfN
 # this_term <- "CL:2706" # with orfN
 # this_term <- "GO:0046486" #with pgs
-this_term <- "KW-0658" # purine biogenesis
-# this_term <- "CL:2388" # large
+# this_term <- "KW-0658" # purine biogenesis
+this_term <- "CL:957" # large
 # this_term <- "GO:0046474"
 # this_term <- "GO:0016780" # with orfN and pgsA
 # this_term <- "GO:0006629" #lipid metabolic process with orfN
@@ -36,7 +38,7 @@ title <- paste(
   sep = " "
 )
 
-# non_normalized_melted_results <- non_normalized_melted_results_LFC %>% 
+# non_normalized_melted_results <- non_normalized_melted_results_LFC %>%
 #   inner_join(non_normalized_melted_results_FDR)
 
 enrichment_plot <- contrast_assignments %>%
@@ -117,37 +119,39 @@ enrichment_plot <- contrast_assignments %>%
     group = factor(group, levels = unique(group))
   ) %>%
   select(
-    assignment, `Guide-level\nLog-fold change`, `Guide-level\nFDR`, label, FDR, spacer
+    assignment, `Guide-level\nLog-fold change`, `Guide-level\nFDR`, label, FDR, spacer, gene
   ) %>%
   unique() %>%
   ggplot(
     aes(x = label, y = `Guide-level\nLog-fold change`)
   ) +
   # draw a horizontal line at 0
-  geom_hline(yintercept = 0, color = "darkgrey", lwd = 1.5, lty = "dashed") +
+  geom_hline(yintercept = 0, color = "black", lwd = 1.5, lty = "dashed") +
   # geom_tile(
   #   aes(alpha = factor(ifelse(FDR <= 0.05, "highlight", "no_highlight"))),
   #   width = Inf, height = Inf, fill = "light grey"
   # ) +
-  geom_sina(
+  geom_quasirandom(
     aes(
-      fill = `Guide-level\nLog-fold change`,
-      size = `Guide-level\nFDR`,
-      # weight = -log10(`Guide-level\nFDR`)
+      # fill = gene,
+      size = `Guide-level\nFDR`, # Commented out because geom_quasirandom doesn't support size directly
     ),
-    shape = 21,
-    color = "black",
-    # lwd = 0.1,
-    scale = "count"
+    # shape = 21,
+    color = "#00000080",
+    fill = "dark grey",
+
+    # Adjust the method if needed to match the desired distribution style
+    # method = "smallest",
   ) +
   geom_boxplot(
+    color = "#ff000080",
     aes(
-      # weight = -log10(`Guide-level\nFDR`)
+      weight = -log10(`Guide-level\nFDR`)
     ),
     alpha = 0.0,
     # draw_quantiles = c(0.25, 0.5, 0.75),
     # scale = "width",
-    lwd = 0.5
+    lwd = 1.5
   ) +
   scale_alpha_manual(
     values = c("highlight" = 0.00, "no_highlight" = 0.025), guide = FALSE
@@ -167,12 +171,12 @@ enrichment_plot <- contrast_assignments %>%
     y = "Guide-level log-fold change"
   ) +
   ggtitle(title) +
-scale_fill_gradient2(
-  low = rgb(1, 0, 0, alpha=0.5), 
-  mid = rgb(1, 1, 1, alpha=0.5), 
-  high = rgb(0, 0, 1, alpha=0.5), 
-  midpoint = 0
-) +
+  # scale_fill_gradient2(
+  #   low = rgb(1, 0, 0, alpha = 0.5),
+  #   mid = rgb(1, 1, 1, alpha = 0.5),
+  #   high = rgb(0, 0, 1, alpha = 0.5),
+  #   midpoint = 0
+  # ) +
   scale_size_continuous(range = c(10, 2), trans = "log10") +
   theme_minimal() +
   # turn angle to 45 degrees
@@ -184,3 +188,5 @@ scale_fill_gradient2(
   )
 
 plot(enrichment_plot)
+
+### make plot ready for publication by coloring guides by gene
