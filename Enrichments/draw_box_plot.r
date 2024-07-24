@@ -6,8 +6,8 @@ require(ggbeeswarm)
 # this_term <- "GO:0045229" # with orfN
 # this_term <- "CL:2706" # with orfN
 # this_term <- "GO:0046486" #with pgs
-# this_term <- "KW-0658" # purine biogenesis
-this_term <- "CL:957" # large
+this_term <- "KW-0658" # purine biogenesis
+# this_term <- "CL:957" # large
 # this_term <- "GO:0046474"
 # this_term <- "GO:0016780" # with orfN and pgsA
 # this_term <- "GO:0006629" #lipid metabolic process with orfN
@@ -177,14 +177,14 @@ enrichment_plot <- ggplot(
   #   color = "red"
   # ) +
   scale_size(
-    range = c(0.01, 3)
+    range = c(0, 3)
   ) +
   labs(
     x = NULL,
     y = "Guide-level log-fold change"
   ) +
   ggtitle(title) +
-  scale_size_continuous(range = c(6, 1), trans = "log10") +
+  scale_size_continuous(range = c(10, 0.25), trans = "log10") +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
