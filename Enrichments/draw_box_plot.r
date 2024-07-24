@@ -38,10 +38,19 @@ title <- paste(
   sep = " "
 )
 
-# non_normalized_melted_results <- non_normalized_melted_results_LFC %>%
-#   inner_join(non_normalized_melted_results_FDR)
+# Function to calculate weighted median
+weighted_median <- function(y, w) {
+  order <- order(y)
+  y <- y[order]
+  w <- w[order]
+  cumw <- cumsum(w)
+  cutoff <- sum(w) / 2
+  median_index <- which(cumw >= cutoff)[1]
+  return(y[median_index])
+}
 
-enrichment_plot <- contrast_assignments %>%
+# Data preparation
+processed_data <- contrast_assignments %>%
   filter(assignment == 1) %>%
   inner_join(
     non_normalized_melted_results %>%
@@ -69,7 +78,7 @@ enrichment_plot <- contrast_assignments %>%
     contrast = case_when(
       contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
       contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-      contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB",
+      contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
     )
   ) %>%
   mutate(
@@ -121,65 +130,62 @@ enrichment_plot <- contrast_assignments %>%
   select(
     assignment, `Guide-level\nLog-fold change`, `Guide-level\nFDR`, label, FDR, spacer, gene
   ) %>%
-  unique() %>%
-  ggplot(
-    aes(x = label, y = `Guide-level\nLog-fold change`)
-  ) +
-  # draw a horizontal line at 0
-  geom_hline(yintercept = 0, color = "black", lwd = 1.5, lty = "dashed") +
-  # geom_tile(
-  #   aes(alpha = factor(ifelse(FDR <= 0.05, "highlight", "no_highlight"))),
-  #   width = Inf, height = Inf, fill = "light grey"
-  # ) +
-  geom_quasirandom(
-    aes(
-      # fill = gene,
-      size = `Guide-level\nFDR`, # Commented out because geom_quasirandom doesn't support size directly
-    ),
-    # shape = 21,
-    color = "#00000080",
-    fill = "dark grey",
+  unique()
 
-    # Adjust the method if needed to match the desired distribution style
-    # method = "smallest",
-  ) +
+# Calculate weighted median for each label
+weighted_medians <- processed_data %>%
+  group_by(label) %>%
+  summarize(
+    weighted_median = weighted_median(`Guide-level\nLog-fold change`, -log10(`Guide-level\nFDR`))
+  )
+
+# Define the enrichment plot
+enrichment_plot <- ggplot(
+  processed_data,
+  aes(x = label, y = `Guide-level\nLog-fold change`)
+) +
+  # draw a horizontal line at 0
+  geom_hline(yintercept = 0, color = "dark grey", lwd = 2, lty = "solid") +
   geom_boxplot(
-    color = "#ff000080",
+    color = "black",
+    alpha = 0.25,
+    lwd = 0.15,
+    outlier.shape = NA
+  ) +
+  geom_quasirandom(
+    data = processed_data,
     aes(
-      weight = -log10(`Guide-level\nFDR`)
+      size = `Guide-level\nFDR`,
     ),
-    alpha = 0.0,
-    # draw_quantiles = c(0.25, 0.5, 0.75),
-    # scale = "width",
-    lwd = 1.5
+    shape = 21,
+    color = "#000000bb",
+    fill = "#000000bb",
+    alpha = 0.75
   ) +
-  scale_alpha_manual(
-    values = c("highlight" = 0.00, "no_highlight" = 0.025), guide = FALSE
+  geom_segment(
+    data = weighted_medians,
+    aes(x = as.numeric(label) - 0.4, xend = as.numeric(label) + 0.4, y = weighted_median, yend = weighted_median),
+    color = "red",
+    lwd = 3,
+    lty = "solid",
+    alpha = 0.5
   ) +
-  scale_size(
-    range = c(0.1, 3)
-  ) +
-  # scale_y_continuous(
-  #   trans = scales::pseudo_log_trans(base = 10),
-  #   breaks = c(10^(0:5)),
-  #   labels = scales::label_number(scale_cut = scales::cut_short_scale())
+  # geom_label(
+  #   data = weighted_medians,
+  #   aes(x = as.numeric(label), y = weighted_median, label = round(weighted_median, 2)),
+  #   # vjust = -0.5,
+  #   color = "red"
   # ) +
-  # facet_wrap(~label) +
-  # label x axis "Assignment" and y axis "Counts per million"
+  scale_size(
+    range = c(0.01, 3)
+  ) +
   labs(
     x = NULL,
     y = "Guide-level log-fold change"
   ) +
   ggtitle(title) +
-  # scale_fill_gradient2(
-  #   low = rgb(1, 0, 0, alpha = 0.5),
-  #   mid = rgb(1, 1, 1, alpha = 0.5),
-  #   high = rgb(0, 0, 1, alpha = 0.5),
-  #   midpoint = 0
-  # ) +
-  scale_size_continuous(range = c(10, 2), trans = "log10") +
+  scale_size_continuous(range = c(6, 1), trans = "log10") +
   theme_minimal() +
-  # turn angle to 45 degrees
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
     axis.title.x = element_text(margin = margin(t = 10)),
@@ -187,6 +193,5 @@ enrichment_plot <- contrast_assignments %>%
     plot.title = element_text(hjust = 0.5)
   )
 
+# Plot the enrichment plot
 plot(enrichment_plot)
-
-### make plot ready for publication by coloring guides by gene
