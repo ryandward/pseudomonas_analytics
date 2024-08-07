@@ -5,12 +5,12 @@ require(ggbeeswarm)
 
 # this_term <- "GO:0045229" # with orfN
 # this_term <- "CL:2706" # with orfN
-# this_term <- "GO:0046486" #with pgs
+# this_term <- "GO:0046486" # with pgs
 this_term <- "KW-0658" # purine biogenesis
 # this_term <- "CL:957" # large
 # this_term <- "GO:0046474"
 # this_term <- "GO:0016780" # with orfN and pgsA
-# this_term <- "GO:0006629" #lipid metabolic process with orfN
+# this_term <- "GO:0006629" # lipid metabolic process with orfN
 title <- term_stats %>%
   filter(term == this_term) %>%
   pull(description)
@@ -184,7 +184,7 @@ enrichment_plot <- ggplot(
     y = "Guide-level log-fold change"
   ) +
   ggtitle(title) +
-  scale_size_continuous(range = c(10, 0.25), trans = "log10") +
+  scale_size_continuous(range = c(10, 0), trans = "log10") +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
@@ -195,3 +195,105 @@ enrichment_plot <- ggplot(
 
 # Plot the enrichment plot
 plot(enrichment_plot)
+
+###
+
+# Calculate weighted median for each label
+
+control_set <- control_set %>%
+  mutate(Direction = case_when(
+    PValue <= 0.05 ~ Direction,
+    TRUE ~ "No change"
+  ))
+
+control_labels <- control_set %>%
+  rename(group = contrast) %>%
+  mutate(
+    group = case_when(
+      group == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
+      group == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
+      group == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
+    )
+  ) %>%
+  mutate(
+    label = paste(
+      group,
+      paste(
+        "p-value:",
+        signif(PValue, 2)
+      ),
+      Direction,
+      sep = "\n"
+    )
+  ) %>%
+  mutate(
+    group = factor(group, levels = unique(group))
+  ) %>%
+  mutate(
+    label = factor(label, levels = unique(label))
+  )
+
+control_weighted_medians <- non_normalized_melted_results %>%
+  filter(type == "control") %>%
+  group_by(condition) %>%
+  summarize(
+    weighted_median = weighted_median(LFC, -log10(FDR))
+  ) %>%
+  mutate(
+    group = case_when(
+      condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
+      condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
+      condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
+    )
+  ) %>%
+  mutate(group = factor(group, levels = unique(group))) %>%
+  inner_join(control_labels)
+
+non_normalized_melted_results %>%
+  rename(group = condition) %>%
+  inner_join(
+    control_set %>%
+      rename(group = contrast)
+  ) %>%
+  mutate(
+    group = case_when(
+      group == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
+      group == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
+      group == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
+    )
+  ) %>%
+  mutate(
+    group = factor(group, levels = unique(group))
+  ) %>%
+  inner_join(control_labels) %>%
+  filter(type == "control") %>%
+  ggplot(aes(x = label, y = LFC)) +
+  geom_hline(yintercept = 0, color = "dark grey", lwd = 2, lty = "solid") +
+  geom_boxplot(outlier.shape = NA, alpha = 0.25) +
+  geom_quasirandom(aes(size = FDR),
+    color = "NA",
+    fill = "black",
+    alpha = 0.3,
+    shape = 21,
+    alpha = 0.5
+  ) +
+  scale_size_continuous(range = c(10, 0), trans = "log10") +
+  geom_segment(
+    data = control_weighted_medians,
+    aes(x = as.numeric(group) - 0.4, xend = as.numeric(group) + 0.4, y = weighted_median, yend = weighted_median),
+    color = "red",
+    lwd = 3,
+    lty = "solid",
+    alpha = 0.5
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  labs(
+    x = NULL,
+    y = "Guide-level log-fold change"
+  )
