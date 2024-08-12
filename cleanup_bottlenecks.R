@@ -73,48 +73,11 @@ botneck.stats <- botneck %>%
 
 botneck.stats <- botneck.stats %>% mutate(Nb.sd = case_when(is.na(Nb.sd) ~ 0, TRUE ~ Nb.sd))
 
-botneck.stats %>%
-  inner_join(exp_design_botneck) %>%
-  filter(type != "focused") %>%
-  filter(!sample_group %like% "100x") %>%
-  filter(!media %like% "Gent") %>%
-  filter(gDNA_source == "plated") %>%
-  mutate(sample_group = paste(media)) %>%
-  ggplot(aes(
-    x = sample_group,
-    y = Nb.mean,
-    fill = type
-  )) +
-  geom_bar(
-    stat = "identity",
-    position = position_dodge(),
-    colour = "black"
-  ) +
-  geom_errorbar(
-    aes(
-      x = sample_group,
-      y = Nb.mean,
-      ymin = Nb.mean - Nb.sd,
-      ymax = Nb.mean + Nb.sd
-    ),
-    width = 0.2,
-    position = position_dodge(0.95)
-  ) +
-  scale_fill_viridis(discrete = T, option = "mako", alpha = 0.25) +
-  theme_bw() +
-  # theme(axis.text.x = element_text(angle = -45, vjust = 0.5, hjust = 1)) +
-  ggtitle("Population Complexity: Bottleneck Metric") +
-  scale_y_continuous(
-    trans = scales::pseudo_log_trans(base = 10),
-    breaks = c(0, 10^seq(1, 7)),
-    labels = label_number(scale_cut = cut_short_scale())
-  ) +
-  theme(axis.title.x = element_blank())
-
 botneck %>%
   inner_join(exp_design_botneck) %>%
   filter(!media %like% "Gent") %>%
   filter(gDNA_source == "plated") %>%
+  filter(!condition %in% c("dJMP3", "dJMP5")) %>%
   # change the name plated_100x_inoculum_dilution_mouse to "100x dilution (mouse)"
   # change the name plated_10x_inoculum_dilution_mouse to "10x dilution (mouse)"
   # change the name plated_6_generations_LB to "6 generations (LB)"
@@ -147,3 +110,151 @@ botneck %>%
   theme(axis.title.x = element_blank()) +
   # make control guides grey, and knockdown guides the "red" from the paired palette
   scale_fill_manual(values = c("grey", "red"))
+
+
+# botneck_stats %>%
+#   filter(count != 0) %>%
+#   filter(type == "knockdown") %>%
+#   group_by(locus_tag, condition) %>%
+#   summarize(unique_count = n()) %>%
+#   data.table() %>%
+#   dcast(locus_tag ~ condition, value.var = "unique_count", fill = 0) %>%
+#   melt(value.name = "unique_count", variable.name = "condition") %>%
+#   group_by(
+#     condition, unique_count
+#   ) %>%
+#   summarize(count_count = n()) %>%
+#   data.table() %>%
+#   dcast(condition ~ unique_count, value.var = "count_count", fill = 0) %>%
+#   i()
+# nner_join(exp_design_botneck) %>%
+#   filter(!condition %in% c("dJMP3", "dJMP5")) %>%
+#   filter(!media %like% "Gent") %>%
+#   filter(gDNA_source == "plated") %>%
+#   clipr::write_clip()
+
+botneck_stats %>%
+  filter(count != 0) %>%
+  filter(type == "knockdown") %>%
+  rbind(
+    botneck_stats %>%
+      filter(count != 0) %>%
+      filter(type == "control") %>%
+      filter(condition == "P1_mfdpir")
+  ) %>%
+  group_by(locus_tag, condition) %>%
+  summarize(unique_count = n()) %>%
+  data.table() %>%
+  dcast(locus_tag ~ condition, value.var = "unique_count", fill = 0) %>%
+  melt(value.name = "unique_count", variable.name = "condition") %>%
+  group_by(
+    condition, unique_count
+  ) %>%
+  summarize(count_count = n()) %>%
+  data.table() %>%
+  dcast(condition ~ unique_count, value.var = "count_count", fill = 0) %>%
+  inner_join(exp_design_botneck) %>%
+  filter(!condition %in% c("dJMP3", "dJMP5")) %>%
+  filter(!media %like% "Gent") %>%
+  filter(gDNA_source == "plated" | condition == "P1_mfdpir") %>%
+  mutate(growth_condition = case_when(
+    condition == "P1_mfdpir" ~ "mating strain",
+    TRUE ~ growth_condition
+  )) %>%
+  select(growth_condition, media, `0`, `1`, `2`, `3`, `4`) %>%
+  data.table() %>%
+  melt(id.vars = c("growth_condition", "media"), variable.name = "guides_per_gene", value.name = "times_seen") %>%
+  group_by(growth_condition, media, guides_per_gene) %>%
+  mutate(rep = row_number()) %>%
+  ggplot(aes(fill = guides_per_gene, y = times_seen, x = rep)) +
+  stat_summary(
+    fun = mean,
+    geom = "bar",
+    position = position_dodge(width = 0.9),
+    # position = "stack",
+    color = "black"
+  ) +
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = position_dodge(width = 0.9),
+    width = 0.2
+  ) +
+  facet_grid(. ~ growth_condition)
+
+
+
+stat_summary(
+  fun = mean,
+  geom = "bar",
+  position = position_dodge(width = 0.9),
+  # position = "stack",
+  color = "black"
+) +
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    position = position_dodge(width = 0.9),
+    width = 0.2
+  )
+
+
+range_fun <- function(y) {
+  ymin <- min(y)
+  ymax <- max(y)
+  return(c(ymin = ymin, ymax = ymax))
+}
+
+botneck_stats %>%
+  filter(count != 0) %>%
+  filter(type == "knockdown") %>%
+  rbind(
+    botneck_stats %>%
+      filter(count != 0) %>%
+      filter(type == "control") %>%
+      filter(condition == "P1_mfdpir")
+  ) %>%
+  group_by(locus_tag, condition) %>%
+  summarize(unique_count = n()) %>%
+  data.table() %>%
+  dcast(locus_tag ~ condition, value.var = "unique_count", fill = 0) %>%
+  melt(value.name = "unique_count", variable.name = "condition") %>%
+  group_by(
+    condition, unique_count
+  ) %>%
+  summarize(count_count = n()) %>%
+  data.table() %>%
+  dcast(condition ~ unique_count, value.var = "count_count", fill = 0) %>%
+  inner_join(exp_design_botneck) %>%
+  filter(!condition %in% c("dJMP3", "dJMP5")) %>%
+  filter(!media %like% "Gent") %>%
+  filter(gDNA_source == "plated" | condition == "P1_mfdpir") %>%
+  mutate(growth_condition = case_when(
+    condition == "P1_mfdpir" ~ "mating strain",
+    TRUE ~ growth_condition
+  )) %>%
+  select(growth_condition, media, `0`, `1`, `2`, `3`, `4`) %>%
+  data.table() %>%
+  melt(id.vars = c("growth_condition", "media"), variable.name = "guides_per_gene", value.name = "times_seen") %>%
+  filter(media == "inoculum") %>%
+  group_by(guides_per_gene) %>%
+  ggplot(aes(x = guides_per_gene, y = times_seen)) +
+  stat_summary(
+    fun = median,
+    geom = "bar",
+    position = position_dodge(width = 0.9),
+    # position = "stack",
+    color = "NA",
+    alpha = 0.5
+  ) +
+  stat_summary(
+    fun.data = range_fun,
+    geom = "errorbar",
+    position = position_dodge(width = 0.9),
+    width = 0.2,
+    # lwd = 1
+  ) +
+  # label x axis as "Guides per Gene"
+  xlab("Guides per Gene") +
+  ylab("Times Seen (Median and Range)") +
+  theme_minimal()
