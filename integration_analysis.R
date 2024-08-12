@@ -5,7 +5,6 @@
 require('pacman')
 
 p_load(
-	ggthemr,
 	data.table,
 	scales,
 	edgeR,
