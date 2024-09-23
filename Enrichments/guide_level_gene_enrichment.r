@@ -220,10 +220,10 @@ fwrite(all_sets_for_export_with_genes, "Enrichments/annotated_gene_set_enrichmen
 # this_term <- "GO:0045229" # with orfN
 # this_term <- "GO:0044205" # significantly up
 this_term <- "KW-0658"
-this_term <- "GO:0046486"
-this_term <- "CL:2706"
-this_term <- "GO:0006629"
-this_term <- "GO:0009156"
+# this_term <- "GO:0046486"
+# this_term <- "CL:2706"
+# this_term <- "GO:0006629"
+# this_term <- "GO:0009156"
 
 title <- term_stats %>%
   filter(term == this_term) %>%
@@ -233,15 +233,16 @@ title <- paste(title, " (", this_term, ")", sep = "")
 
 enrichment_plot <- contrast_assignments %>%
   inner_join(
-    melted_results %>% 
-    rename(contrast = condition, `Guide-level FDR` = FDR)) %>%
+    melted_results %>%
+      rename(contrast = condition, `Guide-level FDR` = FDR)
+  ) %>%
   inner_join(
     group_assignments,
     relationship = "many-to-many"
   ) %>%
   mutate(`Log10 Relative Abundance` = case_when(
-    assignment == -1 ~ log10(2^-LFC/2),
-    assignment == 1 ~ log10(2^LFC/2)
+    assignment == -1 ~ log10(2^-LFC / 2),
+    assignment == 1 ~ log10(2^LFC / 2)
   )) %>%
   inner_join(
     all_sets %>%
@@ -269,8 +270,9 @@ enrichment_plot <- contrast_assignments %>%
       ),
       paste(
         paste(
-          Direction, 
-          "—"),
+          Direction,
+          "—"
+        ),
         paste(
           paste(
             genes_targeted, gene_count,
@@ -326,7 +328,7 @@ enrichment_plot <- contrast_assignments %>%
   ) +
   geom_sina(
     aes(
-      fill = `Log10 Relative Abundance`,
+      fill = assignment,
       size = `Guide-level FDR`,
       weight = -log10(`Guide-level FDR`)
     ),
@@ -336,14 +338,24 @@ enrichment_plot <- contrast_assignments %>%
     alpha = 0.5,
     scale = "area",
   ) +
-  geom_boxplot(
+  # geom_boxplot(
+  #   aes(
+  #     weight = -log10(`Guide-level FDR`)
+  #   ),
+  #   alpha = 0.0,
+  #   draw_quantiles = c(0.25, 0.5, 0.75),
+  #   # scale = "width",
+  #   lwd = 0.75
+  # ) +
+  geom_violin(
     aes(
+      fill = assignment,
       weight = -log10(`Guide-level FDR`)
     ),
-    alpha = 0.0,
+    alpha = 0.35,
     draw_quantiles = c(0.25, 0.5, 0.75),
     # scale = "width",
-    lwd = 0.75
+    lwd = 1.25
   ) +
   scale_alpha_manual(
     values = c("highlight" = 0.00, "no_highlight" = 0.025), guide = FALSE
@@ -363,7 +375,7 @@ enrichment_plot <- contrast_assignments %>%
     y = "Counts per Million"
   ) +
   ggtitle(title %>% stringr::str_wrap(width = 50)) +
-  scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) +
+  # scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0) +
   scale_size_continuous(range = c(5, 1), limits = c(0, 1)) +
   theme_minimal()
 
@@ -498,9 +510,3 @@ plot(enrichment_plot)
 
 
 # plot(enrichment_plot)
-
-
-
-
-
-

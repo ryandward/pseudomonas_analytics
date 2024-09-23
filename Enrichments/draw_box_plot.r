@@ -6,8 +6,8 @@ require(ggbeeswarm)
 # this_term <- "GO:0045229" # with orfN
 # this_term <- "CL:2706" # with orfN
 # this_term <- "GO:0046486" # with pgs
-this_term <- "KW-0658" # purine biogenesis
-# this_term <- "CL:957" # large
+# this_term <- "KW-0658" # purine biogenesis
+this_term <- "CL:957" # large
 # this_term <- "GO:0046474"
 # this_term <- "GO:0016780" # with orfN and pgsA
 # this_term <- "GO:0006629" # lipid metabolic process with orfN
@@ -145,29 +145,42 @@ enrichment_plot <- ggplot(
   aes(x = label, y = `Guide-level\nLog-fold change`)
 ) +
   # draw a horizontal line at 0
-  geom_hline(yintercept = 0, color = "dark grey", lwd = 2, lty = "solid") +
+  geom_hline(yintercept = 0, color = "dark grey", lwd = 1.5, lty = "solid") +
   geom_boxplot(
     color = "black",
-    alpha = 0.25,
+    alpha = 0,
     lwd = 0.15,
     outlier.shape = NA
   ) +
-  geom_quasirandom(
+  # geom_violin(
+  #   fill = "grey",
+  #   alpha = 0.25
+  # ) +
+  # geom_quasirandom(
+  #   data = processed_data,
+  #   aes(
+  #     size = `Guide-level\nFDR`,
+  #   ),
+  #   shape = 21,
+  #   color = "#000000bb",
+  #   fill = "#000000bb",
+  #   alpha = 0.75
+  # ) +
+  geom_segment(
+    data = weighted_medians,
+    aes(x = as.numeric(label) - 0.375, xend = as.numeric(label) + 0.375, y = weighted_median, yend = weighted_median),
+    color = "red",
+    lwd = 2,
+    lty = "solid",
+    alpha = 0.5
+  ) +
+  geom_sina(
     data = processed_data,
     aes(
       size = `Guide-level\nFDR`,
     ),
+    fill = "grey",
     shape = 21,
-    color = "#000000bb",
-    fill = "#000000bb",
-    alpha = 0.75
-  ) +
-  geom_segment(
-    data = weighted_medians,
-    aes(x = as.numeric(label) - 0.4, xend = as.numeric(label) + 0.4, y = weighted_median, yend = weighted_median),
-    color = "red",
-    lwd = 3,
-    lty = "solid",
     alpha = 0.5
   ) +
   # geom_label(
@@ -176,15 +189,21 @@ enrichment_plot <- ggplot(
   #   # vjust = -0.5,
   #   color = "red"
   # ) +
-  scale_size(
-    range = c(0, 3)
-  ) +
+  # scale_size(
+  #   range = c(0, 4)
+  # ) +
   labs(
     x = NULL,
     y = "Guide-level log-fold change"
   ) +
   ggtitle(title) +
-  scale_size_continuous(range = c(10, 0), trans = "log10") +
+  scale_size_continuous(
+    range = c(10, 0),
+    trans = "log10",
+    breaks = c(1e0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10),
+    limits = c(min(processed_data$`Guide-level\nFDR`), 1e0),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))
+  ) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
