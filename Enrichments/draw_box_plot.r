@@ -201,7 +201,7 @@ enrichment_plot <- ggplot(
     range = c(10, 0),
     trans = "log10",
     breaks = c(1e0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10),
-    limits = c(min(processed_data$`Guide-level\nFDR`), 1e0),
+    limits = c(min(processed_data$`Guide-level\nFDR`) / 10, 1e0),
     labels = scales::trans_format("log10", scales::math_format(10^.x))
   ) +
   theme_minimal() +
