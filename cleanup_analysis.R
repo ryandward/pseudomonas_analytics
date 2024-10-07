@@ -222,7 +222,6 @@ count_stats.mat.quality <-
   count_stats.mat %>%
   pivot_longer(cols = -c(type, sequence), names_to = "condition", values_to = "count") %>%
   inner_join(exp_design) %>%
-  # filter(gDNA_source == "plated") %>%
   filter(type != "focused") %>%
   pivot_wider(id_cols = c(type, sequence), names_from = condition, values_from = count, values_fill = 0)
 
@@ -237,7 +236,6 @@ plot_object <- count_stats.mat.quality %>%
   ) %>%
   pivot_longer(cols = -c(type, sequence), names_to = "condition", values_to = "cpm") %>%
   inner_join(exp_design) %>%
-  # unite("growth_condition", c(growth_condition, media)) %>%
   ggplot(aes(x = cpm)) +
   geom_density(aes(fill = rep), alpha = 0.35) +
   scale_x_continuous(
