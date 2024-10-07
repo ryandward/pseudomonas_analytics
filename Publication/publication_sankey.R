@@ -9,12 +9,12 @@ median_melted_results %>%
 			TRUE ~ "No Response")) %>%
 	select(locus_tag, condition, Response) %>% 
 	mutate(condition = case_when(
-		condition == "mouse_plated_10x_inoculum_dilution - inoculum_pellet_t0" ~ "In vivo",
-		condition == "mouse_plated_10x_inoculum_dilution - LB_plated_6_generations" ~ "In vivo v. in vitro",
-		condition == "LB_plated_6_generations - inoculum_pellet_t0" ~ "In vitro"))	%>%
+		condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+		condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+		condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro"))	%>%
 	pivot_longer(!c(condition, locus_tag)) %>% 
 	pivot_wider(id_cols = c(locus_tag), names_from = condition, values_from = value) %>%
-	make_long(`In vivo`, `In vitro`, `In vivo v. in vitro` ) %>% 
+	make_long(`In vitro`, `In vivo`, `In vivo v. in vitro` ) %>% 
 	ggplot(aes(
 		x = x, 
 		next_x = next_x,
