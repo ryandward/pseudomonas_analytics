@@ -1,4 +1,5 @@
 source("cleanup_analysis.R")
+source("final_analytical_questions.r")
 
 p_load(tidyverse, ggplot2, data.table, ggrepel, hrbrthemes, viridis, ggallin)
 doc_theme <- theme_ipsum(
@@ -91,50 +92,86 @@ genes_of_interest <- c(
   "mrfp"
 )
 
-median_melted_results <- median_melted_results %>% 
-      group_by(condition) %>% 
-      arrange(FDR) %>% 
-      filter(locus_tag != "control") %>% 
-      filter(FDR <= 0.05) %>%
-      slice(1:25) %>% select(locus_tag, condition) %>%
-      mutate(top_five = TRUE) %>%
-      right_join(median_melted_results) %>%
-      mutate(top_five = case_when(is.na(top_five) ~ FALSE, TRUE ~ TRUE))
+median_melted_results <- median_melted_results %>%
+  group_by(condition) %>%
+  arrange(FDR) %>%
+  filter(locus_tag != "control") %>%
+  filter(FDR <= 0.05) %>%
+  slice(1:25) %>%
+  select(locus_tag, condition) %>%
+  mutate(top_five = TRUE) %>%
+  right_join(median_melted_results) %>%
+  mutate(top_five = case_when(is.na(top_five) ~ FALSE, TRUE ~ TRUE))
 
-median_melted_results <- median_melted_results %>% 
+median_melted_results <- median_melted_results %>%
   mutate(top_five = case_when((FDR <= 0.05 & gene %in% c("pgsA")) | top_five == TRUE ~ TRUE, TRUE ~ FALSE))
+library(ggplot2)
+library(ggrepel)
+library(cowplot)
+library(ggpointdensity) # Required for coloring points by density
 
-# median_melted_results <- median_melted_results %>%
-# #modify to bold if the name is a locus tag and matches the format PA14_*, by replacing the word "italic" with "bold"
-#   mutate(gene_name_stylized = case_when(
-#     grepl("^PA14_", gene_name) ~ paste0("**", gene_name, "**"),
-#     TRUE ~ gene_name
-#   ))
+# Define a common theme
+common_theme <- theme_minimal() +
+  theme(
+    text = element_text(size = 12),
+    legend.position = "bottom",
+    strip.text = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
 
+# Calculate x-axis limits
+x_limits <- range(median_melted_results$medLFC, na.rm = TRUE)
 
-volcano_plot <- median_melted_results %>%
+# Define modulus transformation and its inverse
+p_value <- 0.25
+trans <- modulus_trans(p = p_value)
+
+# Generate evenly spaced points in the original range from 0 to 300
+n_breaks <- 5
+original_space <- seq(0, 300, length.out = 1000)
+
+# Apply modulus transformation to the original points
+transformed_values <- trans$transform(original_space)
+
+# Select evenly spaced transformed points (between min and max)
+selected_transformed_breaks <- seq(min(transformed_values), max(transformed_values), length.out = n_breaks)
+
+# Apply the inverse transformation to get original values for breaks
+selected_original_breaks <- trans$inverse(selected_transformed_breaks)
+
+# Ensure that 1 is included in the breaks
+selected_original_breaks <- unique(round(c(1, selected_original_breaks)))
+
+# Create the main plot with density-based point coloring
+volcano_plot_density <- median_melted_results %>%
   filter(gene != "control") %>%
+  filter(condition != "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum") %>%
   mutate(condition = case_when(
     condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
     condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
     condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro"
   )) %>%
   ggplot(aes(x = medLFC, y = FDR)) +
-  geom_point(
-    alpha = 0.5,
-    shape = 20,
-    size = 4,
-    aes(
-      alpha = FDR <= 0.05 & abs(medLFC) >= 1,
-      color = top_five
-    )
+  # Add points colored by density, adjust point shape and size
+  geom_pointdensity(aes(alpha = FDR <= 0.05 & abs(medLFC) >= 1), shape = 20, size = 3.5) + # Filled circle, larger size
+  scale_color_viridis_c(
+    option = "plasma", # Use a different color palette for better contrast
+    end = 0.9,
+    name = "Local Density",
+    trans = trans,
+    breaks = selected_original_breaks # Use calculated breaks that include 1 and are rounded for clarity
+  ) +
+  scale_alpha_manual(
+    values = c("TRUE" = 0.5, "FALSE" = 0.15), # Increase opacity for non-significant points
+    guide = "none" # Hide the significance legend
   ) +
   facet_wrap(facets = c("condition")) +
-  doc_theme +
-  theme(legend.position = "bottom") +
-  geom_hline(yintercept = 0.05, linetype = "dashed", color = "black", lwd = 0.5) +
-  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "black", lwd = 0.5) +
-  geom_vline(xintercept = 0, linetype = "solid", color = "black", lwd = 0.75) +
+  common_theme +
+  # Updated threshold lines to be black, thicker, and dashed
+  geom_hline(yintercept = 0.05, linetype = "dashed", color = "black", lwd = 1) +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "black", lwd = 1) +
+  geom_vline(xintercept = 0, linetype = "solid", color = "black", lwd = 1) +
   geom_label_repel(
     data = . %>%
       group_by(condition) %>%
@@ -146,80 +183,37 @@ volcano_plot <- median_melted_results %>%
     parse = TRUE,
     max.overlaps = Inf,
     aes(
-      label = gene_name_stylized,
-      color = FDR < 0.05 & abs(medLFC) > 1
+      label = gene_name_stylized
     ),
-    alpha = 1
+    alpha = 0.8
   ) +
-  scale_alpha_manual(values = c(0.5, 1), guide = "none") +
-  scale_color_manual(values = c("dark gray", "black"), guide = "none") +
-  scale_y_continuous(trans = scales::reverse_trans() %of% scales::log10_trans())
+  scale_y_continuous(trans = scales::reverse_trans() %of% scales::log10_trans()) +
+  coord_cartesian(xlim = x_limits)
 
-print(volcano_plot)
+# Create the marginal density plot
+marginal_plot <- median_melted_results %>%
+  filter(gene != "control") %>%
+  mutate(condition = case_when(
+    condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
+    condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
+    condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro"
+  )) %>%
+  ggplot(aes(x = medLFC)) +
+  geom_density(aes(fill = condition), alpha = 0.5) +
+  facet_wrap(facets = c("condition")) +
+  common_theme +
+  theme(legend.position = "none") +
+  coord_cartesian(xlim = x_limits)
 
+# Combine the main plot and the marginal plot using cowplot
+combined_plot <- plot_grid(
+  volcano_plot_density,
+  marginal_plot,
+  ncol = 1,
+  align = "v",
+  rel_heights = c(3, 1) # Adjust the relative heights
+)
 
+# print(combined_plot)
 
-
-# designed_targets <- fread("designed_targets.tsv", na.strings = c("None")) %>%
-# mutate(type = case_when(
-#   mismatches == 0 ~ "knockdown",
-#   is.na(target) ~ "control"
-# )) %>% filter(is.na(sp_dir) | sp_dir != tar_dir)
-
-
-
-# median_spacers <- count_stats %>%
-# filter(count != 0) %>%
-# select(condition, sequence, count) %>%
-#   # rbind(freezer_stock) %>% inner_join(targets %>% select(spacer, target) %>% unique()) %>% 
-#   group_by(condition) %>%
-#   mutate(cpm = cpm(count), lcpm = log(cpm)) %>% 
-#   group_by(sequence) %>%
-#   mutate(LMT_count = log(mean(cpm)), t_deviance = lcpm - LMT_count, t_sd = sd(cpm)) %>% 
-#   filter(abs(t_deviance) == min(abs(t_deviance)) & t_sd == min(t_sd)) %>%
-#   inner_join(designed_targets %>% rename(sequence = spacer) %>% filter(sp_dir != tar_dir & overlap == 20 & offset >= 0)) %>%
-#   group_by(locus_tag) %>%
-#   mutate(LMG_count = log(mean(cpm)), g_deviance = t_deviance - LMG_count, g_sd = sd(cpm)) %>%
-#   filter(abs(g_deviance) == min(abs(g_deviance)) & g_sd == min(g_sd)) %>%
-#   ungroup %>%
-#   select(locus_tag, sequence) %>% unique()
-
-# median_spacers %>% inner_join(non_normalized_melted_results) %>%
-#   filter(gene != "control") %>%
-#   mutate(condition = case_when(
-#     condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "In vivo",
-#     condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "In vivo v. in vitro",
-#     condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "In vitro"
-#   )) %>%
-#   ggplot(aes(x = FDR, y = LFC)) +
-#   geom_point(
-#     aes(
-#       alpha = FDR <= 0.05 & abs(LFC) >= 1,
-#       color = gene %in% genes_of_interest
-#     )
-#   ) +  
-#   ggrepel::geom_label_repel(
-#     data = . %>%
-#       group_by(condition) %>%
-#       filter(gene != "control") %>%
-#       arrange(FDR) %>%
-#       mutate(index = seq_len(n())) %>%
-#       filter(gene %in% genes_of_interest | index <= 30),
-#     min.segment.length = 0,
-#     parse = TRUE,
-#     max.overlaps = Inf,
-#     aes(
-#       label = gene,
-#       color = FDR < 0.05 & abs(LFC) > 1
-#     ),
-#     alpha = 1
-#   ) +
-
-#   facet_wrap(facets = c("condition")) +
-#   theme(legend.position = "bottom") +
-#   geom_vline(xintercept = 0.05, linetype = "dashed", color = "blue") +
-#   geom_hline(yintercept = c(-1, 1), linetype = "dashed", color = "blue") +
-#   scale_alpha_manual(values = c(0.5, 1), guide = "none") +
-#   scale_color_manual(values = c("dark gray", "red"), guide = "none") +
-#   scale_x_continuous(trans = scales::reverse_trans() %of% scales::log10_trans())
-
+print(volcano_plot_density + theme(panel.spacing = unit(5, "lines")))
