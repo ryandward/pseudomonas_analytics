@@ -95,6 +95,26 @@ all_guides <- all_guides %>%
     TRUE ~ gene
   ))
 
+# Guide distribution during construction
+count_stats %>%
+  filter(condition %in% c("P1_mfdpir", "Mouse_P1_003")) %>%
+  data.table() %>%
+  dcast(sequence ~ condition, value.var = "count") %>%
+  right_join(all_guides %>% select(sequence, locus_tag, type) %>% filter(type != "focused")) %>%
+  melt(id.vars = c("sequence", "type", "locus_tag"), variable.name = "condition", value.name = "count") %>%
+  mutate(count = ifelse(is.na(count), 0, count)) %>%
+  group_by(condition) %>%
+  mutate(cpm = count * 1e6 / sum(count)) %>%
+  ggplot(aes(x = cpm, color = type)) +
+  geom_density(lwd = 2) +
+  facet_grid(condition ~ .) +
+  scale_x_continuous(
+    trans = scales::pseudo_log_trans(base = 10),
+    breaks = c(0, 10^(0:6)),
+    labels = label_number(scale_cut = cut_short_scale())
+  ) +
+  theme_minimal()
+
 map_stats <- fread("map_stats.tsv")
 
 exp_design <- fread("unified_counts/exp_design.tsv")
@@ -135,13 +155,14 @@ exp_design <- exp_design %>%
 
 exp_design <- exp_design %>% mutate(sample_name = paste(gDNA_source, growth_condition, media, rep, sep = "_"))
 
-exp_design <- exp_design %>% filter(sample_group %in% (exp_design %>%
-  group_by(
-    sample_group
-  ) %>%
-  summarise(reps = max(rep)) %>%
-  filter(reps > 1) %>%
-  pull(sample_group)))
+exp_design <- exp_design %>%
+  filter(sample_group %in% (exp_design %>%
+    group_by(
+      sample_group
+    ) %>%
+    summarise(reps = max(rep)) %>%
+    filter(reps > 1) %>%
+    pull(sample_group)))
 
 exp_design <- exp_design %>% data.table()
 
