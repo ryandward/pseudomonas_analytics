@@ -34,6 +34,7 @@ gene_groups <- all_string %>%
 term_stats <- gene_groups %>%
   unnest(locus_tag) %>%
   inner_join(targets %>%
+    filter(type != "focused") %>%
     select(locus_tag) %>% unique()) %>%
   group_by(term, gene_count, description) %>%
   summarize(genes_targeted = n())
