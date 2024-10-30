@@ -3,14 +3,13 @@ source("final_analytical_questions.r")
 
 require(ggbeeswarm)
 
-# this_term <- "GO:0045229" # with orfN
-# this_term <- "CL:2706" # with orfN
-# this_term <- "GO:0046486" # with pgs
-# this_term <- "KW-0658" # purine biogenesis
-this_term <- "CL:957" # large
-# this_term <- "GO:0046474"
-# this_term <- "GO:0016780" # with orfN and pgsA
-# this_term <- "GO:0006629" # lipid metabolic process with orfN
+
+# this_term <- "KW-0658" # Figure 3
+# this_term <- "CL:957" # Figure 3
+this_term <- "CL:2388" # Supplementary Figure
+# this_term <- "CL:924" # Supplementary Figure
+# this_term <- "KW-0289" # Supplementary Figure
+
 title <- term_stats %>%
   filter(term == this_term) %>%
   pull(description)
@@ -71,16 +70,18 @@ processed_data <- contrast_assignments %>%
       mutate(contrast = factor(contrast, levels = unique(contrast)))
   ) %>%
   mutate(Direction = case_when(
-    FDR <= 0.05 ~ Direction,
-    TRUE ~ "No change"
+    FDR > 0.05 ~ "No Response",
+    Direction == "Up" ~ "Resilient",
+    Direction == "Down" ~ "Vulnerable"
   )) %>%
   mutate(
     contrast = case_when(
-      contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
-      contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-      contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
+      contrast == "plated_6_generations_LB - plated_t0_inoculum" ~ "in-vitro vs. initial",
+      contrast == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "in-vivo vs. initial",
+      contrast == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "in-vivo vs. in-vitro"
     )
   ) %>%
+  filter(contrast != "in-vivo vs. initial") %>%
   mutate(
     label = paste(
       contrast,
@@ -134,6 +135,7 @@ processed_data <- contrast_assignments %>%
 
 # Calculate weighted median for each label
 weighted_medians <- processed_data %>%
+  filter(FDR <= 0.05) %>%
   group_by(label) %>%
   summarize(
     weighted_median = weighted_median(`Guide-level\nLog-fold change`, -log10(`Guide-level\nFDR`))
@@ -206,10 +208,10 @@ enrichment_plot <- ggplot(
   ) +
   theme_minimal() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
-    axis.title.x = element_text(margin = margin(t = 10)),
-    axis.title.y = element_text(margin = margin(r = 10)),
-    plot.title = element_text(hjust = 0.5)
+    axis.text.x = element_text(angle = 0, size = 8),
+    axis.title.x = element_text(margin = margin(t = 8)),
+    axis.title.y = element_text(margin = margin(r = 8)),
+    plot.title = element_text(hjust = 0.5, size = 8)
   )
 
 # Plot the enrichment plot
@@ -222,16 +224,16 @@ plot(enrichment_plot)
 control_set <- control_set %>%
   mutate(Direction = case_when(
     PValue <= 0.05 ~ Direction,
-    TRUE ~ "No change"
+    TRUE ~ "No Response"
   ))
 
 control_labels <- control_set %>%
   rename(group = contrast) %>%
   mutate(
     group = case_when(
-      group == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
-      group == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-      group == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
+      group == "plated_6_generations_LB - plated_t0_inoculum" ~ "in-vitro vs. initial",
+      group == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "in-vivo vs. initial",
+      group == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "in-vivo vs. in-vitro"
     )
   ) %>%
   mutate(
@@ -260,9 +262,9 @@ control_weighted_medians <- non_normalized_melted_results %>%
   ) %>%
   mutate(
     group = case_when(
-      condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
-      condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-      condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
+      condition == "plated_6_generations_LB - plated_t0_inoculum" ~ "in-vitro vs. initial",
+      condition == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "in-vivo vs. initial",
+      condition == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "in-vivo vs. in-vitro"
     )
   ) %>%
   mutate(group = factor(group, levels = unique(group))) %>%
@@ -276,9 +278,9 @@ non_normalized_melted_results %>%
   ) %>%
   mutate(
     group = case_when(
-      group == "plated_6_generations_LB - plated_t0_inoculum" ~ "LB vs. INOCULUM",
-      group == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "mouse vs. INOCULUM",
-      group == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "mouse vs. LB"
+      group == "plated_6_generations_LB - plated_t0_inoculum" ~ "in-vitro vs. initial",
+      group == "plated_10x_inoculum_dilution_mouse - plated_t0_inoculum" ~ "n-vivo vs. initial",
+      group == "plated_10x_inoculum_dilution_mouse - plated_6_generations_LB" ~ "in-vivo vs. in-vitro"
     )
   ) %>%
   mutate(
