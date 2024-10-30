@@ -4,6 +4,25 @@ p_load(data.table, tidyverse, edgeR, poolr, scales, pheatmap, viridis)
 
 count_stats <- fread("stats.tsv", col.names = c("sequence", "count", "condition"))
 
+mapping <- data.table(
+  condition = c(
+    "dJMP1", "dJMP2", "dJMP4",
+    "Mouse_P1_003", "Mouse_P1_004", "Mouse_P1_006",
+    "Mouse_P1_015", "Mouse_P1_016", "Mouse_P1_017",
+    "Mouse_P1_018", "Mouse_P1_019", "Mouse_P1_020",
+    "Mouse_P1_021", "Mouse_P1_022",
+    "P1_mfdpir"
+  ),
+  specific_condition = c(
+    "inoculum_rep2", "inoculum_rep3", "LB_6_generations_rep1",
+    "PA14_transconjugant", "LB_6_generations_rep2", "inoculum_rep1",
+    "high_inoculum_rep1", "high_inoculum_rep2", "high_inoculum_rep3",
+    "low_inoculum_rep1", "low_inoculum_rep2", "low_inoculum_rep3",
+    "low_inoculum_rep4", "low_inoculum_rep5",
+    "E_coli_mating_strain"
+  )
+)
+
 all_guides <- fread("all_guides.tsv") %>%
   filter(!sequence %in% c(
     "CCTTGATGCTGTTGAGGATC",
