@@ -1,0 +1,16 @@
+condition,specific_condition
+dJMP1,inoculum_rep2
+dJMP2,inoculum_rep3
+dJMP4,LB_6_generations_rep1
+Mouse_P1_003,PA14_transconjugant
+Mouse_P1_004,LB_6_generations_rep2
+Mouse_P1_006,inoculum_rep1
+Mouse_P1_015,high_inoculum_rep1
+Mouse_P1_016,high_inoculum_rep2
+Mouse_P1_017,high_inoculum_rep3
+Mouse_P1_018,low_inoculum_rep1
+Mouse_P1_019,low_inoculum_rep2
+Mouse_P1_020,low_inoculum_rep3
+Mouse_P1_021,low_inoculum_rep4
+Mouse_P1_022,low_inoculum_rep5
+P1_mfdpir,E_coli_mating_strain

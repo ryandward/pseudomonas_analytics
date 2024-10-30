@@ -1,0 +1,16 @@
+condition	media	gDNA_source	growth_condition	generations
+E_coli_mating_strain	mating	pellet	none	0
+LB_6_generations_rep1	LB	plated	6_generations	6
+LB_6_generations_rep2	LB	plated	6_generations	6
+PA14_transconjugant	inoculum	pellet	t0	0
+high_inoculum_rep1	mouse	plated	10x_inoculum_dilution	16
+high_inoculum_rep2	mouse	plated	10x_inoculum_dilution	16
+high_inoculum_rep3	mouse	plated	10x_inoculum_dilution	16
+inoculum_rep1	inoculum	plated	t0	0
+inoculum_rep2	inoculum	plated	t0	0
+inoculum_rep3	inoculum	plated	t0	0
+low_inoculum_rep1	mouse	plated	100x_inoculum_dilution	16
+low_inoculum_rep2	mouse	plated	100x_inoculum_dilution	16
+low_inoculum_rep3	mouse	plated	100x_inoculum_dilution	16
+low_inoculum_rep4	mouse	plated	100x_inoculum_dilution	16
+low_inoculum_rep5	mouse	plated	100x_inoculum_dilution	16
