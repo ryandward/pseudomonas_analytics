@@ -7,6 +7,7 @@ Genome-wide CRISPRi screen in *P. aeruginosa* PA14 during murine pneumonia infec
 - edgeR v4.2.0 statistical analysis
 - Population bottleneck analysis (Abel et al. 2015)
 - STRING-DB v12.0.2 enrichment
+- Follow-up experiments analyzed in GraphPad Prism Version 10.3.1 (464)
 
 ## Requirements
 edgeR 4.2.0, data.table 1.15.4, ggplot2 3.5.1, limma 3.60.0
