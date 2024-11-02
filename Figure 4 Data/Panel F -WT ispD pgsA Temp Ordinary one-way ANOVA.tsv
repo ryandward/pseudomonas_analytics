@@ -1,0 +1,11 @@
+"Number of families"	1							
+"Number of comparisons per family"	2							
+Alpha	0.05							
+								
+"Dunnett's multiple comparisons test"	"Mean Diff."	"95.00% CI of diff."	"Below threshold?"	Summary	"Adjusted P Value"	C-?		
+"  WT vs. ispD"	-7.833	"-10.66 to -5.009"	Yes	****	<0.0001	A	ispD	
+"  WT vs. pgsA"	-12.08	"-14.73 to -9.441"	Yes	****	<0.0001	B	pgsA	
+								
+"Test details"	"Mean 1"	"Mean 2"	"Mean Diff."	"SE of diff."	n1	n2	q	DF
+"  WT vs. ispD"	-12.33	-4.500	-7.833	1.174	6	6	6.670	17
+"  WT vs. pgsA"	-12.33	-0.2500	-12.08	1.098	6	8	11.00	17

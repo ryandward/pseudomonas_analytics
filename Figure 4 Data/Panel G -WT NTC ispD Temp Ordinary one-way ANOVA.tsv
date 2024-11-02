@@ -1,0 +1,18 @@
+"Number of families"	1							
+"Number of comparisons per family"	3							
+Alpha	0.05							
+								
+"Tukey's multiple comparisons test"	"Mean Diff."	"95.00% CI of diff."	"Below threshold?"	Summary	"Adjusted P Value"			
+"  ispD vs. NTC"	11.11	"6.278 to 15.94"	Yes	****	<0.0001	A-B		
+"  ispD vs. WT"	9.857	"4.869 to 14.85"	Yes	***	0.0002	A-C		
+"  NTC vs. WT"	-1.250	"-6.080 to 3.580"	No	ns	0.7904	B-C		
+								
+"Test details"	"Mean 1"	"Mean 2"	"Mean Diff."	"SE of diff."	n1	n2	q	DF
+"  ispD vs. NTC"	-0.1429	-11.25	11.11	1.901	7	8	8.263	19
+"  ispD vs. WT"	-0.1429	-10.00	9.857	1.963	7	7	7.100	19
+"  NTC vs. WT"	-11.25	-10.00	-1.250	1.901	8	7	0.9299	19
+								
+"Compact letter display"								
+"  ispD"	A							
+"  WT"	B							
+"  NTC"	B							
